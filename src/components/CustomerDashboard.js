@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import './CustomerDashboard.css';
 import {
@@ -25,6 +26,23 @@ export default function CustomerDashboard() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [mode, setMode] = useState('create'); // 'create' or 'edit' or 'view'
   
+=======
+// CustomerDashboard.js (Updated)
+import React, { useState } from 'react';
+import './CustomerDashboard.css';
+import SidebarMenu from './SidebarMenu';
+
+export default function CustomerDashboard({ onNavigate }) {
+  const [customers] = useState([
+    { id: 1, name: 'Pathum Dilshan', email: 'pathum@example.com' },
+    { id: 2, name: 'Sandaru Samitha', email: 'sandaru@example.com' },
+    { id: 3, name: 'Kaveesha Gamage', email: 'kaveesha@example.com' },
+    { id: 4, name: 'Naveen Dhananjaya', email: 'naveen@example.com' },
+    { id: 5, name: 'Ayesh Umayanga', email: 'ayesh@example.com' },
+    { id: 6, name: 'Jane Dolle', email: 'jane@example.com' }
+  ]);
+
+>>>>>>> d363137f586a6fe1478bf9d4fdb0d1359314a2a5
   const [formData, setFormData] = useState({
     givenName: '',
     familyName: '',
@@ -244,10 +262,14 @@ export default function CustomerDashboard() {
 
   return (
     <div className="dashboard-container">
+<<<<<<< HEAD
       {/* Sidebar remains the same */}
       <div className="sidebar">
         {/* ... existing sidebar code ... */}
       </div>
+=======
+      <SidebarMenu onNavigate={onNavigate} currentPage="customers" />
+>>>>>>> d363137f586a6fe1478bf9d4fdb0d1359314a2a5
 
       <div className="main-content">
         <div className="header">
@@ -268,6 +290,7 @@ export default function CustomerDashboard() {
           <div className="content-flex">
             {/* Customer List */}
             <div className="customer-list-container">
+<<<<<<< HEAD
               <form onSubmit={handleSearch} className="search-container">
                 <input
                   type="text"
@@ -276,6 +299,10 @@ export default function CustomerDashboard() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+=======
+              <div className="search-container">
+                <input type="text" placeholder="Search customers" className="search-input" />
+>>>>>>> d363137f586a6fe1478bf9d4fdb0d1359314a2a5
                 <span className="search-icon">🔍</span>
                 <button type="submit" className="search-btn" disabled={isLoading}>
                   {isLoading ? '⌛' : '🔍'}
