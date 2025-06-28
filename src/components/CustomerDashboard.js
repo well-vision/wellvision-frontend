@@ -1,18 +1,9 @@
-// Updated CustomerDashboard.js using regular CSS classes
+// CustomerDashboard.js (Updated)
 import React, { useState } from 'react';
 import './CustomerDashboard.css';
-import {
-  Home,
-  BarChart3,
-  Users,
-  Package,
-  FileText,
-  CreditCard,
-  Settings, 
-  User
-} from 'lucide-react';
+import SidebarMenu from './SidebarMenu';
 
-export default function CustomerDashboard() {
+export default function CustomerDashboard({ onNavigate }) {
   const [customers] = useState([
     { id: 1, name: 'Pathum Dilshan', email: 'pathum@example.com' },
     { id: 2, name: 'Sandaru Samitha', email: 'sandaru@example.com' },
@@ -63,65 +54,7 @@ export default function CustomerDashboard() {
 
   return (
     <div className="dashboard-container">
-      <div className="sidebar">
-        <div className="sidebar-logo">
-          <h1>Well Vision</h1>
-          <p>Logo</p>
-        </div>
-        <div className="sidebar-menu">
-          <p className="menu-label">MENU</p>
-            <div className="menu-nav">
-              <a href="#" className="menu-item">
-                <Home className="menu-icon" />
-                Home
-              </a>
-              <a href="#" className="menu-item">
-                <BarChart3 className="menu-icon" />
-                Daily reports
-              </a>
-              <a href="#" className="menu-item active">
-                <Users className="menu-icon" />
-                Customers
-              </a>
-              <a href="#" className="menu-item">
-                <Package className="menu-icon" />
-                Product
-              </a>
-              <a href="#" className="menu-item">
-                <FileText className="menu-icon" />
-                Invoice
-              </a>
-              <a href="#" className="menu-item">
-                <CreditCard className="menu-icon" />
-                Bills
-              </a>
-        </div>
-
-        <div className="sidebar-menu"></div>
-          <div className="general-section">
-            <p className="menu-label">GENERAL</p>
-            <div className="menu-nav">
-              <a href="#" className="menu-item">
-                <Settings className="menu-icon" />
-                Settings
-              </a>
-              <a href="#" className="menu-item">
-                <User className="menu-icon" />
-                Profile
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="user-profile">
-          <div className="user-profile-content">
-            <div className="user-avatar">JD</div>
-            <div className="user-info">
-              <p className="user-name">Jane Dolle</p>
-              <p className="user-email">janeadmin@example.com</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SidebarMenu onNavigate={onNavigate} currentPage="customers" />
 
       <div className="main-content">
         <div className="header">
@@ -142,11 +75,7 @@ export default function CustomerDashboard() {
           <div className="content-flex">
             <div className="customer-list-container">
               <div className="search-container">
-                <input
-                  type="text"
-                  placeholder="Search customers"
-                  className="search-input"
-                />
+                <input type="text" placeholder="Search customers" className="search-input" />
                 <span className="search-icon">🔍</span>
                 <button className="search-btn">🔍</button>
               </div>
