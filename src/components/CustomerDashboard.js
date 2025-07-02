@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './CustomerDashboard.css';
 import SidebarMenu from './SidebarMenu';
+
 import {
   Home,
   BarChart3,
@@ -75,25 +76,26 @@ export default function CustomerDashboard() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Fetch customers from backend
   const fetchCustomers = async (search = '') => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`http://localhost:5000/api/customers?search=${search}`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch customers');
-      }
-      
-      setCustomers(data.data);
-    } catch (error) {
-      console.error('Failed to fetch customers:', error);
-      toast.error(error.message);
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  try {
+    const response = await fetch(`http://localhost:5000/api/customers?search=${encodeURIComponent(search)}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch customers');
     }
-  };
+
+    const customers = Array.isArray(data.data) ? data.data : data;
+    setCustomers(customers);
+  } catch (error) {
+    console.error('Failed to fetch customers:', error);
+    toast.error(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchCustomers();
