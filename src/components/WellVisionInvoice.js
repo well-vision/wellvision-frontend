@@ -1,44 +1,122 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './WellVisionInvoice.css';
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const WellVisionInvoice = () => {
   const [formData, setFormData] = useState({
-  orderNo: '',
-  date: new Date().toISOString().slice(0, 10),
-  billNo: '',
-  name: '',
-  tel: '',
-  address: '',
-  items: Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
-  amount: '',
-  advance: '',
-  balance: '',
-});
+    orderNo: '',
+    date: new Date().toISOString().slice(0, 10),
+    billNo: '',
+    name: '',
+    tel: '',
+    address: '',
+    items: Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
+    amount: '',
+    advance: '',
+    balance: '',
+  });
 
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch next Bill No from backend
+  useEffect(() => {
+  const fetchBillNo = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/invoices/next-bill-no');
+      const data = await res.json();
+
+      if (data.success) {
+        setFormData(prev => ({
+          ...prev,
+          billNo: data.nextBillNo // Already formatted like INV-0004
+        }));
+      } else {
+        toast.error(data.message || 'Failed to load Bill No');
+      }
+    } catch (err) {
+      toast.error('Error fetching Bill No');
+      console.error(err);
+    }
+  };
+
+  fetchBillNo();
+}, []);
+
+  // Recalculate amount & balance when items or advance changes
+  useEffect(() => {
+    const total = formData.items.reduce((acc, curr) => {
+      const rs = parseFloat(curr.rs) || 0;
+      const cts = parseFloat(curr.cts) || 0;
+      return acc + rs + cts / 100;
+    }, 0);
+
+    const advance = parseFloat(formData.advance) || 0;
+    const balance = total - advance;
+
+    setFormData(prev => ({
+      ...prev,
+      amount: total.toFixed(2),
+      balance: balance.toFixed(2),
+    }));
+  }, [formData.items, formData.advance]);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.orderNo.trim()) newErrors.orderNo = 'Order No is required';
+    if (!formData.date) newErrors.date = 'Date is required';
+    if (!formData.billNo.trim()) newErrors.billNo = 'Bill No is required';
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.tel.trim()) {
+      newErrors.tel = 'Telephone number is required';
+    } else if (!/^\+?[0-9\s-]{7,15}$/.test(formData.tel)) {
+      newErrors.tel = 'Enter a valid telephone number';
+    }
+    if (!formData.address.trim()) newErrors.address = 'Address is required';
+
+    const validItems = formData.items.some(
+      item =>
+        item.item.trim() !== '' &&
+        (!isNaN(item.rs) && item.rs.trim() !== '')
+    );
+    if (!validItems) newErrors.items = 'At least one item with valid Rs. is required';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e, index, field) => {
-  if (index !== undefined) {
-    const updatedItems = [...formData.items];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      [field]: e.target.value,
-    };
-    setFormData({ ...formData, items: updatedItems });
-  } else {
-    setFormData({ ...formData, [field]: e.target.value });
-  }
-};
+    const value = e.target.value;
 
+    if (index !== undefined) {
+      const updatedItems = [...formData.items];
+      updatedItems[index] = {
+        ...updatedItems[index],
+        [field]: value,
+      };
+      setFormData(prev => ({ ...prev, items: updatedItems }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
 
-  const renderLineInput = (value, onChange, width = '200px') => (
+    if (field && errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    if (field === 'items' && errors.items) {
+      setErrors(prev => ({ ...prev, items: '' }));
+    }
+  };
+
+  const renderLineInput = (value, onChange, width = '200px', error = false) => (
     <input
       type="text"
       value={value}
       onChange={onChange}
       style={{
         border: 'none',
-        borderBottom: '1px dotted black',
+        borderBottom: error ? '2px solid red' : '1px dotted black',
         outline: 'none',
         width,
         background: 'transparent',
@@ -48,32 +126,54 @@ const WellVisionInvoice = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      toast.warning('Please fix form errors before submitting.');
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       const response = await fetch('http://localhost:5000/api/invoices/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
-
-      if (data.success) {
-        alert('Invoice saved successfully!');
-        // Optionally reset form here
+      if (response.ok && data.success) {
+        toast.success('Invoice saved successfully!');
+        setFormData({
+          orderNo: '',
+          date: new Date().toISOString().slice(0, 10),
+          billNo: '', // New billNo will be fetched
+          name: '',
+          tel: '',
+          address: '',
+          items: Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
+          amount: '',
+          advance: '',
+          balance: '',
+        });
+        setErrors({});
+        // Refetch new bill number
+        const res = await fetch('http://localhost:5000/api/invoices/next-bill-no');
+        const data2 = await res.json();
+        if (data2.success) {
+          setFormData(prev => ({ ...prev, billNo: data2.nextBillNo }));
+        }
       } else {
-        alert('Failed to save invoice: ' + data.message);
+        toast.error('Failed to save invoice: ' + (data.message || 'Unknown error'));
       }
     } catch (error) {
-      alert('Error saving invoice: ' + error.message);
+      toast.error('Error saving invoice: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form className="bill-container" onSubmit={handleSubmit}>
-      {/* Your entire existing JSX below remains unchanged */}
+    <form className="bill-container" onSubmit={handleSubmit} noValidate>
       <div className="header">
         <div className="logo-section">
           <img src="/logo.png" alt="Well Vision Logo" className="logo" />
@@ -97,18 +197,72 @@ const WellVisionInvoice = () => {
       </div>
 
       <div className="info-row">
-        <span>Order No : {renderLineInput(formData.orderNo, e => handleChange(e, undefined, 'orderNo'), '200px')}</span>
-        <span>Date : {renderLineInput(formData.date, e => handleChange(e, undefined, 'date'), '200px')}</span>
-        <span>Bill No : {renderLineInput(formData.billNo, e => handleChange(e, undefined, 'billNo'), '150px')}</span>
+        <span>
+          Order No :{' '}
+          {renderLineInput(
+            formData.orderNo,
+            e => handleChange(e, undefined, 'orderNo'),
+            '200px',
+            !!errors.orderNo
+          )}
+          {errors.orderNo && <div className="error-message">{errors.orderNo}</div>}
+        </span>
+        <span>
+          Date :{' '}
+          {renderLineInput(
+            formData.date,
+            e => handleChange(e, undefined, 'date'),
+            '200px',
+            !!errors.date
+          )}
+          {errors.date && <div className="error-message">{errors.date}</div>}
+        </span>
+        <span>
+          Bill No :{' '}
+          {renderLineInput(
+            formData.billNo,
+            e => handleChange(e, undefined, 'billNo'),
+            '150px',
+            !!errors.billNo
+          )}
+          {errors.billNo && <div className="error-message">{errors.billNo}</div>}
+        </span>
       </div>
 
       <div className="info-row">
-        <span>Name : {renderLineInput(formData.name, e => handleChange(e, undefined, 'name'), '590px')}</span>
-        <span>Tel : {renderLineInput(formData.tel, e => handleChange(e, undefined, 'tel'), '150px')}</span>
+        <span>
+          Name :{' '}
+          {renderLineInput(
+            formData.name,
+            e => handleChange(e, undefined, 'name'),
+            '590px',
+            !!errors.name
+          )}
+          {errors.name && <div className="error-message">{errors.name}</div>}
+        </span>
+        <span>
+          Tel :{' '}
+          {renderLineInput(
+            formData.tel,
+            e => handleChange(e, undefined, 'tel'),
+            '150px',
+            !!errors.tel
+          )}
+          {errors.tel && <div className="error-message">{errors.tel}</div>}
+        </span>
       </div>
 
       <div className="info-row">
-        <span>Address : {renderLineInput(formData.address, e => handleChange(e, undefined, 'address'), '580px')}</span>
+        <span>
+          Address :{' '}
+          {renderLineInput(
+            formData.address,
+            e => handleChange(e, undefined, 'address'),
+            '580px',
+            !!errors.address
+          )}
+          {errors.address && <div className="error-message">{errors.address}</div>}
+        </span>
       </div>
 
       <br />
@@ -124,14 +278,21 @@ const WellVisionInvoice = () => {
         <tbody>
           {formData.items.map((row, i) => (
             <tr key={i}>
-              <td>{renderLineInput(row.item, e => handleChange(e, i, 'item'))}</td>
-              <td>{renderLineInput(row.description, e => handleChange(e, i, 'description'))}</td>
-              <td>{renderLineInput(row.rs, e => handleChange(e, i, 'rs'), '60px')}</td>
+              <td>
+                {renderLineInput(row.item, e => handleChange(e, i, 'item'), '150px')}
+              </td>
+              <td>
+                {renderLineInput(row.description, e => handleChange(e, i, 'description'), '250px')}
+              </td>
+              <td>
+                {renderLineInput(row.rs, e => handleChange(e, i, 'rs'), '60px', !!errors.items)}
+              </td>
               <td>{renderLineInput(row.cts, e => handleChange(e, i, 'cts'), '60px')}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      {errors.items && <div className="error-message" style={{ marginBottom: '10px' }}>{errors.items}</div>}
 
       <div className="footer-section">
         <div className="signature">
@@ -140,9 +301,36 @@ const WellVisionInvoice = () => {
           Signature
         </div>
         <div className="amounts">
-          <p>Amount {renderLineInput(formData.amount, e => handleChange(e, undefined, 'amount'), '150px')}</p>
-          <p>Advance {renderLineInput(formData.advance, e => handleChange(e, undefined, 'advance'), '150px')}</p>
-          <p>Balance {renderLineInput(formData.balance, e => handleChange(e, undefined, 'balance'), '150px')}</p>
+          <p>
+            Amount{' '}
+            {renderLineInput(
+              formData.amount,
+              e => handleChange(e, undefined, 'amount'),
+              '150px',
+              !!errors.amount
+            )}
+            {errors.amount && <div className="error-message">{errors.amount}</div>}
+          </p>
+          <p>
+            Advance{' '}
+            {renderLineInput(
+              formData.advance,
+              e => handleChange(e, undefined, 'advance'),
+              '150px',
+              !!errors.advance
+            )}
+            {errors.advance && <div className="error-message">{errors.advance}</div>}
+          </p>
+          <p>
+            Balance{' '}
+            {renderLineInput(
+              formData.balance,
+              e => handleChange(e, undefined, 'balance'),
+              '150px',
+              !!errors.balance
+            )}
+            {errors.balance && <div className="error-message">{errors.balance}</div>}
+          </p>
         </div>
       </div>
 
@@ -165,10 +353,14 @@ const WellVisionInvoice = () => {
 
       <div className="galewela">Galewela</div>
 
-      {/* Add Submit button here */}
+      {/* Submit Button */}
       <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button type="submit" style={{ padding: '10px 30px', fontSize: '16px', cursor: 'pointer' }}>
-          Save Invoice
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          style={{ padding: '10px 30px', fontSize: '16px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+        >
+          {isSubmitting ? 'Saving...' : 'Save Invoice'}
         </button>
       </div>
     </form>
