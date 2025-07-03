@@ -1,0 +1,136 @@
+/* WellVisionBill.css */
+.bill-container {
+  width: 1000px;
+  margin: 0 auto;
+  border: 5px solid black;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  background: white;
+  color: black;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.logo-section {
+  display: flex;
+  align-items: flex-start;
+}
+
+.logo {
+  height: 80px;
+  margin-right: 20px;
+}
+
+.logo-section h1 {
+  color: #E00000;
+  font-size: 28px;
+  margin: 0;
+  font-weight: bold;
+}
+
+.tagline {
+  font-weight: bold;
+  font-size: 14px;
+  margin-top: -4px;
+}
+
+.br-number {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.services {
+  font-size: 12px;
+  font-style: italic;
+  max-width: 550px;
+}
+
+.services-box {
+  border: 1px solid #000;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 5px;
+  background-color: #918f8f;
+}
+
+.contact-section {
+  font-size: 13px;
+  font-weight: bold;
+  text-align: right;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin: 10px 0;
+  margin-right: 20px;
+  margin-left: 10px;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.items-table th {
+  background-color: #E00000;
+  color: white;
+  border: 1px solid black;
+  padding: 5px;
+  font-size: 14px;
+}
+
+.items-table td {
+  border: 1px solid black;
+  padding: 10px;
+  height: 40px;
+}
+
+.footer-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.signature {
+  text-align: center;
+  font-size: 14px;  
+  margin-top: 60px;
+}
+
+.amounts {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.notice {
+  font-size: 12px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.sinhala {
+  font-family: 'Noto Sans Sinhala', sans-serif;
+}
+
+.notice-bottom {
+  margin-top: 10px;
+}
+
+.galewela {
+  background-color: #E00000;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  padding: 5px 15px;
+  margin-top: 15px;
+}

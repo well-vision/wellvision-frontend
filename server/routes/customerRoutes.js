@@ -21,6 +21,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+// NEW: GET last 10 customers added
+router.get('/recent', async (req, res) => {
+  try {
+    const recentCustomers = await Customer.find()
+      .sort({ createdAt: -1 })  // newest first
+      .limit(10);               // only last 10
+    res.json({ data: recentCustomers });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch recent customers', error: err.message });
+  }
+});
+
 // POST: Add new customer
 router.post('/', async (req, res) => {
   try {

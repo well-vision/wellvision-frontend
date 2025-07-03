@@ -1,7 +1,6 @@
 // SalesDashboard.js
 import React, { useState } from 'react';
 import './SalesDashboard.css';
-import SidebarMenu from './SidebarMenu';
 
 export default function SalesDashboard({ onNavigate }) {
   const [salesData] = useState([
@@ -106,9 +105,6 @@ export default function SalesDashboard({ onNavigate }) {
   };
 
   return (
-    <div className="dashboard-container">
-      <SidebarMenu onNavigate={onNavigate} currentPage="home" />
-
       <div className="main-content">
         <div className="header">
           <div className="header-content">
@@ -225,6 +221,5 @@ export default function SalesDashboard({ onNavigate }) {
           </div>
         </div>
       </div>
-    </div>
   );
 }
