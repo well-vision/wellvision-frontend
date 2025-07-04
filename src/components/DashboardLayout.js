@@ -6,7 +6,7 @@ const DashboardLayout = ({ children, activePage, onNavigate }) => {
   return (
     <div className="dashboard-layout">
       <aside className="sidebar">
-        <SidebarMenu activePage={activePage} onNavigate={onNavigate} />
+        <SidebarMenu active={activePage} onNavigate={onNavigate} />
       </aside>
       <main className="main-content">
         {children}

@@ -78,8 +78,8 @@ export default function CustomerDashboard() {
       newErrors.gender = 'Please select a gender';
     }
 
-    if (!formData.nationality) {
-      newErrors.nationality = 'Ethnicity  is required';
+    if (!formData.ethnicity) {
+      newErrors.ethnicity = 'Ethnicity  is required';
     }
 
     if (!formData.phoneNo.trim()) {
@@ -180,7 +180,7 @@ export default function CustomerDashboard() {
       birthDate: '',
       nicPassport: '',
       gender: '',
-      nationality: '',
+      ethnicity: '',
       phoneNo: '',
       address: '',
       email: ''
@@ -200,7 +200,7 @@ export default function CustomerDashboard() {
       birthDate: customer.birthDate ? customer.birthDate.slice(0, 10) : '',
       nicPassport: customer.nicPassport,
       gender: customer.gender,
-      ethnicity : customer.nationality || '',
+      ethnicity : customer.ethnicity || '',
       phoneNo: customer.phoneNo,
       address: customer.address,
       email: customer.email

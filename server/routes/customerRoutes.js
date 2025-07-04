@@ -14,19 +14,19 @@ router.get('/', async (req, res) => {
         { familyName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
       ],
-    }).sort({ createdAt: -1 }); // optional: show latest first
+    }).sort({ createdAt: -1 });
     res.json({ data: customers });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch customers', error: err.message });
   }
 });
 
-// NEW: GET last 10 customers added
+// GET: Last 10 customers
 router.get('/recent', async (req, res) => {
   try {
     const recentCustomers = await Customer.find()
-      .sort({ createdAt: -1 })  // newest first
-      .limit(10);               // only last 10
+      .sort({ createdAt: -1 })
+      .limit(10);
     res.json({ data: recentCustomers });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch recent customers', error: err.message });
@@ -35,19 +35,46 @@ router.get('/recent', async (req, res) => {
 
 // POST: Add new customer
 router.post('/', async (req, res) => {
+  console.log('📥 Incoming Customer POST Request Body:', req.body);
+
   try {
+    // Basic required field check (in case frontend fails)
+    const {
+      givenName,
+      familyName,
+      ageYears,
+      birthDate,
+      nicPassport,
+      gender,
+      ethnicity,
+      phoneNo,
+      address,
+      email
+    } = req.body;
+
+    if (
+      !givenName || !familyName || !ageYears || !birthDate ||
+      !nicPassport || !gender || !ethnicity || !phoneNo || !address || !email
+    ) {
+      return res.status(400).json({
+        message: 'Missing required fields. Please fill all mandatory fields.'
+      });
+    }
+
     const customer = new Customer(req.body);
-    await customer.save();
+    const saved = await customer.save();
+
     res.status(201).json({
       message: 'Customer added successfully',
-      customer,
+      customer: saved,
     });
   } catch (err) {
+    console.error('❌ Error creating customer:', err);
     res.status(400).json({ message: 'Failed to add customer', error: err.message });
   }
 });
 
-// PUT: Update existing customer by _id
+// PUT: Update customer
 router.put('/:id', async (req, res) => {
   try {
     const updated = await Customer.findByIdAndUpdate(req.params.id, req.body, {
@@ -61,7 +88,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE: Delete customer by _id
+// DELETE: Remove customer
 router.delete('/:id', async (req, res) => {
   try {
     const deleted = await Customer.findByIdAndDelete(req.params.id);
