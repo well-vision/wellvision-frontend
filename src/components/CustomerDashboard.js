@@ -36,7 +36,7 @@ export default function CustomerDashboard() {
     birthDate: '',
     nicPassport: '',
     gender: '',
-    nationality: '',
+    ethnicity: '',
     phoneNo: '',
     address: '',
     email: ''
@@ -78,8 +78,8 @@ export default function CustomerDashboard() {
       newErrors.gender = 'Please select a gender';
     }
 
-    if (!formData.nationality.trim()) {
-      newErrors.nationality = 'Nationality is required';
+    if (!formData.nationality) {
+      newErrors.nationality = 'Ethnicity  is required';
     }
 
     if (!formData.phoneNo.trim()) {
@@ -200,7 +200,7 @@ export default function CustomerDashboard() {
       birthDate: customer.birthDate ? customer.birthDate.slice(0, 10) : '',
       nicPassport: customer.nicPassport,
       gender: customer.gender,
-      nationality: customer.nationality,
+      ethnicity : customer.nationality || '',
       phoneNo: customer.phoneNo,
       address: customer.address,
       email: customer.email
@@ -433,6 +433,7 @@ export default function CustomerDashboard() {
                 </div>
 
                 <div className="form-row">
+                  {/* Gender dropdown */}
                   <div className="form-group">
                     <select
                       name="gender"
@@ -448,19 +449,28 @@ export default function CustomerDashboard() {
                     </select>
                     {errors.gender && <span className="error-message">{errors.gender}</span>}
                   </div>
+
+                  {/* Ethnicity dropdown (replaces nationality) */}
                   <div className="form-group">
-                    <input
-                      type="text"
-                      name="nationality"
-                      placeholder="Nationality"
-                      value={formData.nationality}
+                    <select
+                      name="ethnicity"
+                      value={formData.ethnicity}
                       onChange={handleInputChange}
                       className="form-input"
                       disabled={mode === 'view'}
-                    />
-                    {errors.nationality && <span className="error-message">{errors.nationality}</span>}
+                    >
+                      <option value="">Select Ethnicity</option>
+                      <option value="Sinhalese">Sinhalese</option>
+                      <option value="Tamil">Tamil</option>
+                      <option value="Moor">Moor</option>
+                      <option value="Malay">Malay</option>
+                      <option value="Burghers">Burghers</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    {errors.ethnicity && <span className="error-message">{errors.ethnicity}</span>}
                   </div>
                 </div>
+
 
                 <div className="form-group">
                   <input

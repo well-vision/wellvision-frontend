@@ -1,13 +1,16 @@
 import React from 'react';
 import SidebarMenu from './SidebarMenu';
+import './DashboardLayout.css'; // Adjust path if needed
 
-const DashboardLayout = ({ activePage, onNavigate, children }) => {
+const DashboardLayout = ({ children, activePage, onNavigate }) => {
   return (
-    <div className="dashboard-container" style={{ display: 'flex' }}>
-      <SidebarMenu active={activePage} onNavigate={onNavigate} />
-      <div className="main-content" style={{ flex: 1 }}>
+    <div className="dashboard-layout">
+      <aside className="sidebar">
+        <SidebarMenu activePage={activePage} onNavigate={onNavigate} />
+      </aside>
+      <main className="main-content">
         {children}
-      </div>
+      </main>
     </div>
   );
 };

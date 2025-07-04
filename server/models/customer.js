@@ -8,7 +8,7 @@ const customerSchema = new mongoose.Schema({
   birthDate: Date,
   nicPassport: String,
   gender: String,
-  nationality: String,
+  ethnicity : String,
   phoneNo: String,
   address: String,
   email: String,
