@@ -366,3 +366,46 @@
     max-width: 1800px; /* Limits extreme stretching on very large screens */
   }
 }
+
+/* Container holding the edit/save/cancel buttons */
+.profile-details-table + div {
+  margin-bottom: 15px;
+}
+
+/* Style the Edit, Save, Cancel buttons */
+.profile-details-table + div button {
+  margin-right: 10px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #007bff;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.profile-details-table + div button:hover {
+  background-color: #0056b3;
+}
+
+/* Different style for Cancel button */
+.profile-details-table + div button:last-child {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.profile-details-table + div button:last-child:hover {
+  background-color: #565e64;
+}
+
+/* Input and select fields styling in edit mode */
+.profile-details-table input,
+.profile-details-table select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}

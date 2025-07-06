@@ -22,11 +22,13 @@ function AppWithLayout() {
 
   // Determine the active sidebar page based on the current path
   const getActivePage = () => {
-    if (location.pathname.startsWith('/customers')) return 'customers';
-    if (location.pathname.startsWith('/invoice')) return 'invoice';
-    if (location.pathname.startsWith('/profile')) return 'profile';
-    return 'home';
-  };
+  if (location.pathname.startsWith('/customers')) return 'customers';
+  if (location.pathname.startsWith('/customer/')) return 'customers'; // 👈 Add this line
+  if (location.pathname.startsWith('/invoice')) return 'invoice';
+  if (location.pathname.startsWith('/profile')) return 'profile';
+  return 'home';
+};
+
 
   // Handle sidebar navigation clicks
   const handleNavigate = (page) => {
