@@ -1,33 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import './CustomerDashboard.css';
+import { Trash2, Edit } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import 'react-toastify/dist/ReactToastify.css';
 import WellVisionInvoice from './WellVisionInvoice';
 
-import {
-  Home,
-  BarChart3,
-  Users,
-  Package,
-  FileText,
-  CreditCard,
-  Settings,
-  User,
-  Trash2,
-  Eye,
-  Edit
-} from 'lucide-react';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
 export default function CustomerDashboard() {
-  const [allCustomers, setAllCustomers] = useState([]);  // all fetched customers
-  const [filteredCustomers, setFilteredCustomers] = useState([]); // filtered + last 10 latest
+  const [allCustomers, setAllCustomers] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [mode, setMode] = useState('create'); // 'create' or 'edit' or 'view'
-  const [activePage, setActivePage] = useState('home');
+  const [mode, setMode] = useState('create');
+  const [activePage, setActivePage] = useState('home'); // add activePage state
 
   const [formData, setFormData] = useState({
     givenName: '',
@@ -42,91 +30,43 @@ export default function CustomerDashboard() {
     email: ''
   });
 
-  // Enhanced form validation
+  const navigate = useNavigate();
+
+  // Validation function
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.givenName.trim()) {
-      newErrors.givenName = 'Given name is required';
-    } else if (formData.givenName.length < 2) {
-      newErrors.givenName = 'Must be at least 2 characters';
-    }
-
-    if (!formData.familyName.trim()) {
-      newErrors.familyName = 'Family name is required';
-    } else if (formData.familyName.length < 2) {
-      newErrors.familyName = 'Must be at least 2 characters';
-    }
-
-    if (!formData.ageYears) {
-      newErrors.ageYears = 'Age is required';
-    } else if (isNaN(formData.ageYears) || formData.ageYears < 0 || formData.ageYears > 120) {
-      newErrors.ageYears = 'Enter a valid age (0–120)';
-    }
-
-    if (!formData.birthDate) {
-      newErrors.birthDate = 'Birth date is required';
-    }
-
-    if (!formData.nicPassport.trim()) {
-      newErrors.nicPassport = 'NIC/Passport number is required';
-    } else if (!/^[A-Za-z0-9]{5,15}$/.test(formData.nicPassport)) {
-      newErrors.nicPassport = '5–15 characters, letters and numbers only';
-    }
-
-    if (!formData.gender) {
-      newErrors.gender = 'Please select a gender';
-    }
-
-    if (!formData.ethnicity) {
-      newErrors.ethnicity = 'Ethnicity  is required';
-    }
-
-    if (!formData.phoneNo.trim()) {
-      newErrors.phoneNo = 'Phone number is required';
-    } else if (!/^\+?[0-9\s-]{7,15}$/.test(formData.phoneNo)) {
-      newErrors.phoneNo = 'Enter a valid phone number';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
-    }
+    if (!formData.givenName.trim()) newErrors.givenName = 'Given name is required';
+    if (!formData.familyName.trim()) newErrors.familyName = 'Family name is required';
+    if (!formData.ageYears) newErrors.ageYears = 'Age is required';
+    if (!formData.birthDate) newErrors.birthDate = 'Birth date is required';
+    if (!formData.nicPassport.trim()) newErrors.nicPassport = 'NIC/Passport number is required';
+    if (!formData.gender) newErrors.gender = 'Please select a gender';
+    if (!formData.ethnicity) newErrors.ethnicity = 'Ethnicity is required';
+    if (!formData.phoneNo.trim()) newErrors.phoneNo = 'Phone number is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    if (!formData.address.trim()) newErrors.address = 'Address is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Fetch all customers once on mount
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`http://localhost:5000/api/customers`);
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch customers');
-      }
+      if (!response.ok) throw new Error(data.message || 'Failed to fetch customers');
 
       const customers = Array.isArray(data.data) ? data.data : data;
-
-      // Sort by newest first (using createdAt if exists, fallback to _id)
-      const sortedCustomers = [...customers].sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        }
+      const sorted = [...customers].sort((a, b) => {
+        if (a.createdAt && b.createdAt) return new Date(b.createdAt) - new Date(a.createdAt);
         return b._id.localeCompare(a._id);
       });
 
-      setAllCustomers(sortedCustomers);
-      setFilteredCustomers(sortedCustomers.slice(0, 10));
+      setAllCustomers(sorted);
+      setFilteredCustomers(sorted.slice(0, 10));
     } catch (error) {
-      console.error('Failed to fetch customers:', error);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
@@ -137,7 +77,6 @@ export default function CustomerDashboard() {
     fetchCustomers();
   }, []);
 
-  // Filter customers by search term on any relevant field
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredCustomers(allCustomers.slice(0, 10));
@@ -145,33 +84,18 @@ export default function CustomerDashboard() {
     }
 
     const term = searchTerm.toLowerCase();
-
     const filtered = allCustomers.filter(c =>
       c.givenName.toLowerCase().includes(term) ||
       c.familyName.toLowerCase().includes(term) ||
       c.phoneNo.toLowerCase().includes(term) ||
       c.email.toLowerCase().includes(term) ||
       c.nicPassport.toLowerCase().includes(term) ||
-      c.nationality.toLowerCase().includes(term)
+      c.nationality?.toLowerCase().includes(term)
     );
 
     setFilteredCustomers(filtered.slice(0, 10));
   }, [searchTerm, allCustomers]);
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  // Reset form to empty state
   const resetForm = () => {
     setFormData({
       givenName: '',
@@ -190,81 +114,57 @@ export default function CustomerDashboard() {
     setMode('create');
   };
 
-  // Select customer for view/edit
-  const handleSelectCustomer = (customer) => {
-    setSelectedCustomer(customer);
-    setFormData({
-      givenName: customer.givenName,
-      familyName: customer.familyName,
-      ageYears: customer.ageYears,
-      birthDate: customer.birthDate ? customer.birthDate.slice(0, 10) : '',
-      nicPassport: customer.nicPassport,
-      gender: customer.gender,
-      ethnicity : customer.ethnicity || '',
-      phoneNo: customer.phoneNo,
-      address: customer.address,
-      email: customer.email
-    });
-    setMode('view');
+  // ======= MISSING FUNCTIONS YOU MUST ADD =======
+
+  // Input change handler
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
-  const handleEdit = () => {
-    setMode('edit');
-  };
-
+  // Form submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       toast.warning('Please fix the form errors');
       return;
     }
 
     setIsSubmitting(true);
-    try {
-      const submitData = {
-        ...formData,
-        ageYears: Number(formData.ageYears)
-      };
 
-      let response;
-      if (mode === 'create') {
-        response = await fetch('http://localhost:5000/api/customers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(submitData)
-        });
-      } else {
-        response = await fetch(`http://localhost:5000/api/customers/${selectedCustomer._id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(submitData)
-        });
-      }
+    try {
+      const submitData = { ...formData, ageYears: Number(formData.ageYears) };
+      const url = mode === 'create'
+        ? 'http://localhost:5000/api/customers'
+        : `http://localhost:5000/api/customers/${selectedCustomer._id}`;
+
+      const response = await fetch(url, {
+        method: mode === 'create' ? 'POST' : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submitData)
+      });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to save customer');
-      }
+      if (!response.ok) throw new Error(result.message || 'Failed to save customer');
 
       toast.success(`Customer ${mode === 'create' ? 'added' : 'updated'} successfully!`);
       resetForm();
       fetchCustomers();
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast.error(error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Delete customer handler
   const handleDelete = async () => {
     if (!selectedCustomer) return;
-
-    if (!window.confirm(`Are you sure you want to delete ${selectedCustomer.givenName} ${selectedCustomer.familyName}?`)) {
-      return;
-    }
+    if (!window.confirm(`Are you sure you want to delete ${selectedCustomer.givenName} ${selectedCustomer.familyName}?`)) return;
 
     try {
       const response = await fetch(`http://localhost:5000/api/customers/${selectedCustomer._id}`, {
@@ -272,23 +172,34 @@ export default function CustomerDashboard() {
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to delete customer');
-      }
+      if (!response.ok) throw new Error(result.message || 'Failed to delete customer');
 
       toast.success('Customer deleted successfully!');
       resetForm();
       fetchCustomers();
     } catch (error) {
-      console.error('Error deleting customer:', error);
       toast.error(error.message);
     }
   };
 
-  const getInitials = (givenName, familyName) => {
-    return ((givenName?.charAt(0) || '') + (familyName?.charAt(0) || '')).toUpperCase();
+  // Enable edit mode
+  const handleEdit = () => {
+    if (selectedCustomer) setMode('edit');
   };
+
+  // Navigate to customer profile page
+  const handleSelectCustomer = (customer) => {
+    setSelectedCustomer(customer);
+    setMode('view');
+
+    // You can optionally populate the form here if you want
+
+    navigate(`/customer/${customer._id}`, { state: { customer } });
+  };
+
+  // Utility functions
+  const getInitials = (givenName, familyName) =>
+    ((givenName?.charAt(0) || '') + (familyName?.charAt(0) || '')).toUpperCase();
 
   const getColorClass = (index) =>
     ['bg-blue', 'bg-green', 'bg-purple', 'bg-red', 'bg-yellow', 'bg-pink'][index % 6];
@@ -311,9 +222,7 @@ export default function CustomerDashboard() {
 
       <div className="content-area">
         <div className="content-flex">
-          {/* Customer List + Search */}
           <div className="customer-list-container">
-
             <form onSubmit={e => e.preventDefault()} className="search-container">
               <input
                 type="text"
@@ -335,7 +244,7 @@ export default function CustomerDashboard() {
                   filteredCustomers.map((c, i) => (
                     <div
                       key={c._id}
-                      className={`customer-item ${selectedCustomer?._id === c._id ? 'selected' : ''}`}
+                      className="customer-item"
                       onClick={() => handleSelectCustomer(c)}
                     >
                       <div className={`customer-avatar ${getColorClass(i)}`}>
@@ -450,7 +359,7 @@ export default function CustomerDashboard() {
                     {errors.gender && <span className="error-message">{errors.gender}</span>}
                   </div>
 
-                  {/* Ethnicity dropdown (replaces nationality) */}
+                  {/* Ethnicity dropdown */}
                   <div className="form-group">
                     <select
                       name="ethnicity"
@@ -470,7 +379,6 @@ export default function CustomerDashboard() {
                     {errors.ethnicity && <span className="error-message">{errors.ethnicity}</span>}
                   </div>
                 </div>
-
 
                 <div className="form-group">
                   <input

@@ -1,39 +1,65 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './App.css';
 import CustomerDashboard from './components/CustomerDashboard';
 import SalesDashboard from './components/SalesDashboard';
 import WellVisionInvoice from './components/WellVisionInvoice';
 import DashboardLayout from './components/DashboardLayout';
+import CustomerProfile from './components/CustomerProfile';
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate
+} from 'react-router-dom';
 
-  const handleNavigate = (page) => {
-    setCurrentPage(page);
+// Wrapper to include layout only for dashboard routes
+function AppWithLayout() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const getActivePage = () => {
+    if (location.pathname.startsWith('/customers')) return 'customers';
+    if (location.pathname.startsWith('/invoice')) return 'invoice';
+    if (location.pathname.startsWith('/profile')) return 'profile';
+    return 'home';
   };
 
-  const renderCurrentPage = () => {
-    switch (currentPage) {
+  const handleNavigate = (page) => {
+    switch (page) {
       case 'customers':
-        return <CustomerDashboard />;
+        navigate('/customers');
+        break;
       case 'invoice':
-        return <WellVisionInvoice />;
-      case 'home':
-      case 'daily-reports':
-      case 'products':
-      case 'bills':
-      case 'settings':
+        navigate('/invoice');
+        break;
       case 'profile':
+        navigate('/profile');
+        break;
       default:
-        return <SalesDashboard />;
+        navigate('/');
     }
   };
 
   return (
-    <DashboardLayout activePage={currentPage} onNavigate={handleNavigate}>
-      {renderCurrentPage()}
+    <DashboardLayout activePage={getActivePage()} onNavigate={handleNavigate}>
+      <Routes>
+        <Route path="/" element={<SalesDashboard />} />
+        <Route path="/customers" element={<CustomerDashboard />} />
+        <Route path="/customer/:id" element={<CustomerProfile />} />
+        <Route path="/invoice" element={<WellVisionInvoice />} />
+        <Route path="/profile" element={<SalesDashboard />} />
+        {/* Add more routes if needed */}
+      </Routes>
     </DashboardLayout>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router>
+      <AppWithLayout />
+    </Router>
+  );
+}
