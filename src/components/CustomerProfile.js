@@ -1,33 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom'; // Get :customerId from URL
 import { ChevronDown, Plus, ChevronRight } from 'lucide-react';
 import WellVisionInvoice from './WellVisionInvoice';
 import './CustomerProfile.css';
+import { toast } from 'react-toastify';
 
 const CustomerProfile = () => {
-  const customer = {
-    givenName: 'Pathum',
-    familyName: 'Dilshan',
-    phoneNo: '076 658 8177',
-    email: 'pathum@example.com',
-    nicPassport: '123456789V',
-    gender: 'Male',
-    ethnicity: 'Sinhalese',
-    address: '123 Main St, Colombo',
-    birthDate: '1990-01-01',
-  };
-
-  const prescriptions = [
-    { id: 1, name: 'Prescription 1', description: 'Description', date: '2023-07-01', time: '10:00 AM' },
-    { id: 2, name: 'Prescription 2', description: 'Description', date: '2023-07-05', time: '2:00 PM' },
-    { id: 3, name: 'Prescription 3', description: 'Description', date: '2023-07-10', time: '11:30 AM' },
-  ];
-
-  const tabs = ['Personal Details', 'Job Card', 'Billing', 'xxxxxx', 'xxxxxx'];
+  const { customerId } = useParams();
+  const [customer, setCustomer] = useState(null);
+  const [prescriptions, setPrescriptions] = useState([]);
   const [activeTab, setActiveTab] = useState('Personal Details');
   const [expandedSections, setExpandedSections] = useState({
     customerDetails: true,
     prescription: true,
   });
+  const [loading, setLoading] = useState(true);
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
@@ -35,6 +22,45 @@ const CustomerProfile = () => {
       [section]: !prev[section],
     }));
   };
+
+  useEffect(() => {
+  if (!customerId) return;
+
+  const fetchCustomer = async () => {
+    setLoading(true);
+    try {
+      console.log('Fetching customer with ID:', customerId);
+      const res = await fetch(`http://localhost:5000/api/customers/${customerId}`);
+
+      console.log('Response status:', res.status);
+
+      const data = await res.json();
+      console.log('Response data:', data);
+
+      if (!res.ok) throw new Error(data.message || 'Failed to fetch customer');
+
+      setCustomer(data.customer);
+
+      // Set example prescriptions or fetch real ones if available
+      setPrescriptions([
+        { id: 1, name: 'Prescription 1', description: 'Description', date: '2023-07-01', time: '10:00 AM' },
+        { id: 2, name: 'Prescription 2', description: 'Description', date: '2023-07-05', time: '2:00 PM' },
+        { id: 3, name: 'Prescription 3', description: 'Description', date: '2023-07-10', time: '11:30 AM' },
+      ]);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchCustomer();
+}, [customerId]);
+
+
+  if (loading) return <div className="loading-message">Loading customer profile...</div>;
+  if (!customer) return <div className="error-message">Customer not found.</div>;
 
   const renderSection = (title, isOpen, toggleKey, children) => (
     <section className="profile-card" aria-expanded={isOpen}>
@@ -65,7 +91,9 @@ const CustomerProfile = () => {
           </h2>
         </div>
         <div className="profile-header-right">
-          <button className="profile-icon-btn" title="Refresh">⟳</button>
+          <button className="profile-icon-btn" title="Refresh" onClick={() => window.location.reload()}>
+            ⟳
+          </button>
           <button className="profile-icon-btn" title="Notifications">
             🔔 <span className="profile-notification-badge">24</span>
           </button>
@@ -90,7 +118,7 @@ const CustomerProfile = () => {
       {renderSection('Customer Details', expandedSections.customerDetails, 'customerDetails', (
         <>
           <div className="profile-tabs">
-            {tabs.map(tab => (
+            {['Personal Details', 'Job Card', 'Billing', 'xxxxxx', 'xxxxxx'].map((tab) => (
               <button
                 key={tab}
                 className={`profile-tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -120,7 +148,7 @@ const CustomerProfile = () => {
                   <td><strong>Address</strong></td>
                   <td>{customer.address}</td>
                   <td><strong>Birth Date</strong></td>
-                  <td>{customer.birthDate}</td>
+                  <td>{customer.birthDate?.slice(0, 10)}</td>
                 </tr>
               </tbody>
             </table>

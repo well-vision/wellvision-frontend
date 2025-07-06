@@ -50,7 +50,7 @@ function AppWithLayout() {
       <Routes>
         <Route path="/" element={<SalesDashboard />} />
         <Route path="/customers" element={<CustomerDashboard />} />
-        <Route path="/customer/:id" element={<CustomerProfile />} />
+        <Route path="/customer/:customerId" element={<CustomerProfile />} />
         <Route path="/invoice" element={<WellVisionInvoice />} />
         <Route path="/profile" element={<SalesDashboard />} />
         {/* Fallback route: redirect unknown paths to home */}
