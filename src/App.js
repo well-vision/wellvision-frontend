@@ -11,7 +11,8 @@ import {
   Routes,
   Route,
   useLocation,
-  useNavigate
+  useNavigate,
+  Navigate,
 } from 'react-router-dom';
 
 // Wrapper to include layout only for dashboard routes
@@ -19,6 +20,7 @@ function AppWithLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Determine the active sidebar page based on the current path
   const getActivePage = () => {
     if (location.pathname.startsWith('/customers')) return 'customers';
     if (location.pathname.startsWith('/invoice')) return 'invoice';
@@ -26,6 +28,7 @@ function AppWithLayout() {
     return 'home';
   };
 
+  // Handle sidebar navigation clicks
   const handleNavigate = (page) => {
     switch (page) {
       case 'customers':
@@ -50,7 +53,8 @@ function AppWithLayout() {
         <Route path="/customer/:id" element={<CustomerProfile />} />
         <Route path="/invoice" element={<WellVisionInvoice />} />
         <Route path="/profile" element={<SalesDashboard />} />
-        {/* Add more routes if needed */}
+        {/* Fallback route: redirect unknown paths to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </DashboardLayout>
   );

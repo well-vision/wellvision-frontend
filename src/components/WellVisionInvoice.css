@@ -1,4 +1,5 @@
-/* WellVisionBill.css */
+/* WellVisionInvoice.css */
+
 .bill-container {
   width: 1000px;
   margin: 0 auto;
@@ -73,6 +74,17 @@
   margin-left: 10px;
 }
 
+.info-row span {
+  display: flex;
+  flex-direction: column;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
 .items-table {
   width: 100%;
   border-collapse: collapse;
@@ -133,4 +145,21 @@
   text-align: center;
   padding: 5px 15px;
   margin-top: 15px;
+}
+
+/* Input styles matching inline React styles */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="tel"] {
+  border: none;
+  border-bottom: 1px dotted black;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  padding: 2px 4px;
+}
+
+input[aria-invalid="true"] {
+  border-bottom: 2px solid red !important;
 }

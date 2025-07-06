@@ -4,18 +4,28 @@ import { Trash2, Edit } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
-import WellVisionInvoice from './WellVisionInvoice';
+
+// Debounce hook
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 export default function CustomerDashboard() {
   const [allCustomers, setAllCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [mode, setMode] = useState('create');
-  const [activePage, setActivePage] = useState('home'); // add activePage state
+  const [mode, setMode] = useState('create'); // create | edit | view
 
   const [formData, setFormData] = useState({
     givenName: '',
@@ -32,7 +42,7 @@ export default function CustomerDashboard() {
 
   const navigate = useNavigate();
 
-  // Validation function
+  // Validation function (basic + regex hints for NIC, email, phone)
   const validateForm = () => {
     const newErrors = {};
     if (!formData.givenName.trim()) newErrors.givenName = 'Given name is required';
@@ -40,16 +50,23 @@ export default function CustomerDashboard() {
     if (!formData.ageYears) newErrors.ageYears = 'Age is required';
     if (!formData.birthDate) newErrors.birthDate = 'Birth date is required';
     if (!formData.nicPassport.trim()) newErrors.nicPassport = 'NIC/Passport number is required';
+    else if (!/^[0-9]{9}[VvXx]|[0-9]{12}$/.test(formData.nicPassport))
+      newErrors.nicPassport = 'Invalid NIC/Passport format';
     if (!formData.gender) newErrors.gender = 'Please select a gender';
     if (!formData.ethnicity) newErrors.ethnicity = 'Ethnicity is required';
     if (!formData.phoneNo.trim()) newErrors.phoneNo = 'Phone number is required';
+    else if (!/^(?:0|94|\+94)?(7[0-9]{8})$/.test(formData.phoneNo))
+      newErrors.phoneNo = 'Invalid Sri Lankan phone number';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email))
+      newErrors.email = 'Invalid email format';
     if (!formData.address.trim()) newErrors.address = 'Address is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Fetch customers from backend
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
@@ -73,29 +90,32 @@ export default function CustomerDashboard() {
     }
   };
 
+  // Fetch once on mount
   useEffect(() => {
     fetchCustomers();
   }, []);
 
+  // Filter customers on debounced searchTerm change
   useEffect(() => {
-    if (!searchTerm.trim()) {
+    if (!debouncedSearchTerm.trim()) {
       setFilteredCustomers(allCustomers.slice(0, 10));
       return;
     }
 
-    const term = searchTerm.toLowerCase();
+    const term = debouncedSearchTerm.toLowerCase();
     const filtered = allCustomers.filter(c =>
       c.givenName.toLowerCase().includes(term) ||
       c.familyName.toLowerCase().includes(term) ||
       c.phoneNo.toLowerCase().includes(term) ||
       c.email.toLowerCase().includes(term) ||
       c.nicPassport.toLowerCase().includes(term) ||
-      c.nationality?.toLowerCase().includes(term)
+      c.ethnicity?.toLowerCase().includes(term)
     );
 
     setFilteredCustomers(filtered.slice(0, 10));
-  }, [searchTerm, allCustomers]);
+  }, [debouncedSearchTerm, allCustomers]);
 
+  // Reset form to initial empty state
   const resetForm = () => {
     setFormData({
       givenName: '',
@@ -114,19 +134,38 @@ export default function CustomerDashboard() {
     setMode('create');
   };
 
-  // ======= MISSING FUNCTIONS YOU MUST ADD =======
+  // Revert form to selected customer data (cancel editing)
+  const revertForm = () => {
+    if (selectedCustomer) {
+      setFormData({
+        givenName: selectedCustomer.givenName || '',
+        familyName: selectedCustomer.familyName || '',
+        ageYears: selectedCustomer.ageYears || '',
+        birthDate: selectedCustomer.birthDate ? selectedCustomer.birthDate.slice(0, 10) : '',
+        nicPassport: selectedCustomer.nicPassport || '',
+        gender: selectedCustomer.gender || '',
+        ethnicity: selectedCustomer.ethnicity || '',
+        phoneNo: selectedCustomer.phoneNo || '',
+        address: selectedCustomer.address || '',
+        email: selectedCustomer.email || ''
+      });
+      setErrors({});
+      setMode('view');
+    } else {
+      resetForm();
+    }
+  };
 
   // Input change handler
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  // Form submit handler
+  // Form submit handler (create or update)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
@@ -182,22 +221,33 @@ export default function CustomerDashboard() {
     }
   };
 
-  // Enable edit mode
+  // Enable edit mode and populate form
   const handleEdit = () => {
-    if (selectedCustomer) setMode('edit');
+    if (selectedCustomer) {
+      setMode('edit');
+      setFormData({
+        givenName: selectedCustomer.givenName || '',
+        familyName: selectedCustomer.familyName || '',
+        ageYears: selectedCustomer.ageYears || '',
+        birthDate: selectedCustomer.birthDate ? selectedCustomer.birthDate.slice(0, 10) : '',
+        nicPassport: selectedCustomer.nicPassport || '',
+        gender: selectedCustomer.gender || '',
+        ethnicity: selectedCustomer.ethnicity || '',
+        phoneNo: selectedCustomer.phoneNo || '',
+        address: selectedCustomer.address || '',
+        email: selectedCustomer.email || ''
+      });
+    }
   };
 
   // Navigate to customer profile page
   const handleSelectCustomer = (customer) => {
     setSelectedCustomer(customer);
     setMode('view');
-
-    // You can optionally populate the form here if you want
-
     navigate(`/customer/${customer._id}`, { state: { customer } });
   };
 
-  // Utility functions
+  // Helpers for UI
   const getInitials = (givenName, familyName) =>
     ((givenName?.charAt(0) || '') + (familyName?.charAt(0) || '')).toUpperCase();
 
@@ -264,7 +314,7 @@ export default function CustomerDashboard() {
 
           {/* Customer Form */}
           <div className="form-container">
-            <form onSubmit={handleSubmit} className="form-card">
+            <form onSubmit={handleSubmit} className="form-card" noValidate>
               <div className="form-header">
                 <div className="form-icon"><span>+</span></div>
                 <h3 className="form-title">
@@ -283,6 +333,7 @@ export default function CustomerDashboard() {
                       onChange={handleInputChange}
                       className={`form-input ${errors.givenName ? 'error' : ''}`}
                       disabled={mode === 'view'}
+                      autoComplete="off"
                     />
                     {errors.givenName && <span className="error-message">{errors.givenName}</span>}
                   </div>
@@ -295,6 +346,7 @@ export default function CustomerDashboard() {
                       onChange={handleInputChange}
                       className={`form-input ${errors.familyName ? 'error' : ''}`}
                       disabled={mode === 'view'}
+                      autoComplete="off"
                     />
                     {errors.familyName && <span className="error-message">{errors.familyName}</span>}
                   </div>
@@ -321,7 +373,7 @@ export default function CustomerDashboard() {
                       name="birthDate"
                       value={formData.birthDate}
                       onChange={handleInputChange}
-                      className="form-input"
+                      className={`form-input ${errors.birthDate ? 'error' : ''}`}
                       disabled={mode === 'view'}
                     />
                     {errors.birthDate && <span className="error-message">{errors.birthDate}</span>}
@@ -337,6 +389,7 @@ export default function CustomerDashboard() {
                     onChange={handleInputChange}
                     className={`form-input ${errors.nicPassport ? 'error' : ''}`}
                     disabled={mode === 'view'}
+                    autoComplete="off"
                   />
                   {errors.nicPassport && <span className="error-message">{errors.nicPassport}</span>}
                 </div>
@@ -348,7 +401,7 @@ export default function CustomerDashboard() {
                       name="gender"
                       value={formData.gender}
                       onChange={handleInputChange}
-                      className="form-input"
+                      className={`form-input ${errors.gender ? 'error' : ''}`}
                       disabled={mode === 'view'}
                     >
                       <option value="">Select Gender</option>
@@ -365,7 +418,7 @@ export default function CustomerDashboard() {
                       name="ethnicity"
                       value={formData.ethnicity}
                       onChange={handleInputChange}
-                      className="form-input"
+                      className={`form-input ${errors.ethnicity ? 'error' : ''}`}
                       disabled={mode === 'view'}
                     >
                       <option value="">Select Ethnicity</option>
@@ -389,6 +442,7 @@ export default function CustomerDashboard() {
                     onChange={handleInputChange}
                     className={`form-input ${errors.email ? 'error' : ''}`}
                     disabled={mode === 'view'}
+                    autoComplete="off"
                   />
                   {errors.email && <span className="error-message">{errors.email}</span>}
                 </div>
@@ -402,6 +456,7 @@ export default function CustomerDashboard() {
                     onChange={handleInputChange}
                     className={`form-input ${errors.phoneNo ? 'error' : ''}`}
                     disabled={mode === 'view'}
+                    autoComplete="off"
                   />
                   {errors.phoneNo && <span className="error-message">{errors.phoneNo}</span>}
                 </div>
@@ -438,13 +493,25 @@ export default function CustomerDashboard() {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="submit"
-                      className="submit-btn"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Processing...' : mode === 'create' ? 'CREATE' : 'UPDATE'}
-                    </button>
+                    <div className="edit-mode-buttons">
+                      <button
+                        type="submit"
+                        className="submit-btn"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? 'Processing...' : mode === 'create' ? 'CREATE' : 'UPDATE'}
+                      </button>
+                      {mode === 'edit' && (
+                        <button
+                          type="button"
+                          className="cancel-btn"
+                          onClick={revertForm}
+                          disabled={isSubmitting}
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -452,10 +519,6 @@ export default function CustomerDashboard() {
           </div>
         </div>
       </div>
-
-      {activePage === 'invoice' && (
-        <WellVisionInvoice />
-      )}
     </div>
   );
 }

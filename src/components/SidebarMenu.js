@@ -1,5 +1,4 @@
-// SidebarMenu.js
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './SidebarMenu.css';
 import {
   Home,
@@ -13,7 +12,8 @@ import {
 } from 'lucide-react';
 
 export default function SidebarMenu({ active = 'home', onNavigate }) {
-  const [isOpen, setIsOpen] = useState(true); // for mobile toggle
+  const [isOpen, setIsOpen] = useState(true);
+  const sidebarRef = useRef(null);
 
   const menuItems = [
     { label: 'Home', icon: <Home />, key: 'home' },
@@ -29,6 +29,25 @@ export default function SidebarMenu({ active = 'home', onNavigate }) {
     { label: 'Profile', icon: <User />, key: 'profile' }
   ];
 
+  // Close sidebar when clicking outside (mobile)
+  useEffect(() => {
+    function handleOutsideClick(e) {
+      if (isOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isOpen]);
+
+  const onKeyDown = (e, key) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onNavigate(key);
+      setIsOpen(false);
+    }
+  };
+
   const renderNavItems = (items) =>
     items.map((item) => (
       <div
@@ -36,8 +55,12 @@ export default function SidebarMenu({ active = 'home', onNavigate }) {
         className={`menu-item ${active === item.key ? 'active' : ''}`}
         onClick={() => {
           onNavigate(item.key);
-          setIsOpen(false); // auto-close on mobile
+          setIsOpen(false);
         }}
+        role="link"
+        tabIndex={0}
+        aria-current={active === item.key ? 'page' : undefined}
+        onKeyDown={(e) => onKeyDown(e, item.key)}
       >
         <span className="menu-icon">{item.icon}</span>
         {item.label}
@@ -47,11 +70,21 @@ export default function SidebarMenu({ active = 'home', onNavigate }) {
   return (
     <>
       {/* Hamburger for mobile */}
-      <button className="sidebar-toggle" onClick={() => setIsOpen(!isOpen)}>
+      <button
+        className="sidebar-toggle"
+        aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen(!isOpen)}
+      >
         ☰
       </button>
 
-      <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
+      <nav
+        className={`sidebar ${isOpen ? 'open' : 'closed'}`}
+        ref={sidebarRef}
+        role="navigation"
+        aria-label="Main sidebar navigation"
+      >
         <div className="sidebar-logo">
           <h1>Well Vision</h1>
           <p>Logo</p>
@@ -59,15 +92,11 @@ export default function SidebarMenu({ active = 'home', onNavigate }) {
 
         <div className="sidebar-menu">
           <p className="menu-label">MENU</p>
-          <div className="menu-nav">
-            {renderNavItems(menuItems)}
-          </div>
+          <div className="menu-nav">{renderNavItems(menuItems)}</div>
 
           <br />
           <p className="menu-label">GENERAL</p>
-          <div className="menu-nav">
-            {renderNavItems(generalItems)}
-          </div>
+          <div className="menu-nav">{renderNavItems(generalItems)}</div>
         </div>
 
         <div className="user-profile">
@@ -79,7 +108,7 @@ export default function SidebarMenu({ active = 'home', onNavigate }) {
             </div>
           </div>
         </div>
-      </div>
+      </nav>
     </>
   );
 }

@@ -22,27 +22,24 @@ const WellVisionInvoice = () => {
 
   // Fetch next Bill No from backend
   useEffect(() => {
-  const fetchBillNo = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/api/invoices/next-bill-no');
-      const data = await res.json();
+    const fetchBillNo = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/invoices/next-bill-no');
+        const data = await res.json();
 
-      if (data.success) {
-        setFormData(prev => ({
-          ...prev,
-          billNo: data.nextBillNo // Already formatted like INV-0004
-        }));
-      } else {
-        toast.error(data.message || 'Failed to load Bill No');
+        if (data.success) {
+          setFormData(prev => ({ ...prev, billNo: data.nextBillNo }));
+        } else {
+          toast.error(data.message || 'Failed to load Bill No');
+        }
+      } catch (err) {
+        toast.error('Error fetching Bill No');
+        console.error(err);
       }
-    } catch (err) {
-      toast.error('Error fetching Bill No');
-      console.error(err);
-    }
-  };
+    };
 
-  fetchBillNo();
-}, []);
+    fetchBillNo();
+  }, []);
 
   // Recalculate amount & balance when items or advance changes
   useEffect(() => {
@@ -88,7 +85,7 @@ const WellVisionInvoice = () => {
   };
 
   const handleChange = (e, index, field) => {
-    const value = e.target.value;
+    const { value } = e.target;
 
     if (index !== undefined) {
       const updatedItems = [...formData.items];
@@ -101,6 +98,7 @@ const WellVisionInvoice = () => {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
 
+    // Clear error on change
     if (field && errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -109,9 +107,10 @@ const WellVisionInvoice = () => {
     }
   };
 
-  const renderLineInput = (value, onChange, width = '200px', error = false) => (
+  const renderLineInput = (value, onChange, width = '200px', error = false, type = 'text', name = '') => (
     <input
-      type="text"
+      type={type}
+      name={name}
       value={value}
       onChange={onChange}
       style={{
@@ -121,6 +120,11 @@ const WellVisionInvoice = () => {
         width,
         background: 'transparent',
       }}
+      aria-invalid={error ? 'true' : 'false'}
+      aria-describedby={error ? `${name}-error` : undefined}
+      step={type === 'number' ? 'any' : undefined}
+      min={type === 'number' ? '0' : undefined}
+      autoComplete="off"
     />
   );
 
@@ -203,9 +207,11 @@ const WellVisionInvoice = () => {
             formData.orderNo,
             e => handleChange(e, undefined, 'orderNo'),
             '200px',
-            !!errors.orderNo
+            !!errors.orderNo,
+            'text',
+            'orderNo'
           )}
-          {errors.orderNo && <div className="error-message">{errors.orderNo}</div>}
+          {errors.orderNo && <div id="orderNo-error" className="error-message">{errors.orderNo}</div>}
         </span>
         <span>
           Date :{' '}
@@ -213,9 +219,11 @@ const WellVisionInvoice = () => {
             formData.date,
             e => handleChange(e, undefined, 'date'),
             '200px',
-            !!errors.date
+            !!errors.date,
+            'date',
+            'date'
           )}
-          {errors.date && <div className="error-message">{errors.date}</div>}
+          {errors.date && <div id="date-error" className="error-message">{errors.date}</div>}
         </span>
         <span>
           Bill No :{' '}
@@ -223,9 +231,11 @@ const WellVisionInvoice = () => {
             formData.billNo,
             e => handleChange(e, undefined, 'billNo'),
             '150px',
-            !!errors.billNo
+            !!errors.billNo,
+            'text',
+            'billNo'
           )}
-          {errors.billNo && <div className="error-message">{errors.billNo}</div>}
+          {errors.billNo && <div id="billNo-error" className="error-message">{errors.billNo}</div>}
         </span>
       </div>
 
@@ -236,9 +246,11 @@ const WellVisionInvoice = () => {
             formData.name,
             e => handleChange(e, undefined, 'name'),
             '590px',
-            !!errors.name
+            !!errors.name,
+            'text',
+            'name'
           )}
-          {errors.name && <div className="error-message">{errors.name}</div>}
+          {errors.name && <div id="name-error" className="error-message">{errors.name}</div>}
         </span>
         <span>
           Tel :{' '}
@@ -246,9 +258,11 @@ const WellVisionInvoice = () => {
             formData.tel,
             e => handleChange(e, undefined, 'tel'),
             '150px',
-            !!errors.tel
+            !!errors.tel,
+            'tel',
+            'tel'
           )}
-          {errors.tel && <div className="error-message">{errors.tel}</div>}
+          {errors.tel && <div id="tel-error" className="error-message">{errors.tel}</div>}
         </span>
       </div>
 
@@ -259,9 +273,11 @@ const WellVisionInvoice = () => {
             formData.address,
             e => handleChange(e, undefined, 'address'),
             '580px',
-            !!errors.address
+            !!errors.address,
+            'text',
+            'address'
           )}
-          {errors.address && <div className="error-message">{errors.address}</div>}
+          {errors.address && <div id="address-error" className="error-message">{errors.address}</div>}
         </span>
       </div>
 
@@ -279,15 +295,17 @@ const WellVisionInvoice = () => {
           {formData.items.map((row, i) => (
             <tr key={i}>
               <td>
-                {renderLineInput(row.item, e => handleChange(e, i, 'item'), '150px')}
+                {renderLineInput(row.item, e => handleChange(e, i, 'item'), '150px', false, 'text', `item-${i}`)}
               </td>
               <td>
-                {renderLineInput(row.description, e => handleChange(e, i, 'description'), '250px')}
+                {renderLineInput(row.description, e => handleChange(e, i, 'description'), '250px', false, 'text', `description-${i}`)}
               </td>
               <td>
-                {renderLineInput(row.rs, e => handleChange(e, i, 'rs'), '60px', !!errors.items)}
+                {renderLineInput(row.rs, e => handleChange(e, i, 'rs'), '60px', !!errors.items, 'number', `rs-${i}`)}
               </td>
-              <td>{renderLineInput(row.cts, e => handleChange(e, i, 'cts'), '60px')}</td>
+              <td>
+                {renderLineInput(row.cts, e => handleChange(e, i, 'cts'), '60px', false, 'number', `cts-${i}`)}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -305,11 +323,13 @@ const WellVisionInvoice = () => {
             Amount{' '}
             {renderLineInput(
               formData.amount,
-              e => handleChange(e, undefined, 'amount'),
+              () => {}, // no onChange, readonly
               '150px',
-              !!errors.amount
+              !!errors.amount,
+              'text',
+              'amount'
             )}
-            {errors.amount && <div className="error-message">{errors.amount}</div>}
+            {errors.amount && <div id="amount-error" className="error-message">{errors.amount}</div>}
           </p>
           <p>
             Advance{' '}
@@ -317,19 +337,23 @@ const WellVisionInvoice = () => {
               formData.advance,
               e => handleChange(e, undefined, 'advance'),
               '150px',
-              !!errors.advance
+              !!errors.advance,
+              'number',
+              'advance'
             )}
-            {errors.advance && <div className="error-message">{errors.advance}</div>}
+            {errors.advance && <div id="advance-error" className="error-message">{errors.advance}</div>}
           </p>
           <p>
             Balance{' '}
             {renderLineInput(
               formData.balance,
-              e => handleChange(e, undefined, 'balance'),
+              () => {}, // no onChange, readonly
               '150px',
-              !!errors.balance
+              !!errors.balance,
+              'text',
+              'balance'
             )}
-            {errors.balance && <div className="error-message">{errors.balance}</div>}
+            {errors.balance && <div id="balance-error" className="error-message">{errors.balance}</div>}
           </p>
         </div>
       </div>
@@ -353,12 +377,11 @@ const WellVisionInvoice = () => {
 
       <div className="galewela">Galewela</div>
 
-      {/* Submit Button */}
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+      <div style={{ marginTop: 20, textAlign: 'center' }}>
         <button
           type="submit"
           disabled={isSubmitting}
-          style={{ padding: '10px 30px', fontSize: '16px', cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+          style={{ padding: '10px 30px', fontSize: 16, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
         >
           {isSubmitting ? 'Saving...' : 'Save Invoice'}
         </button>
