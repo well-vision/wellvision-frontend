@@ -45,7 +45,7 @@ export default function CustomerDashboard() {
 
   const handleCustomerClick = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/customers/${id}`);
+      const res = await fetch(`http://localhost:4000/api/customers/${id}`);
       const data = await res.json();
 
       if (res.ok && data.success) {
@@ -88,7 +88,7 @@ export default function CustomerDashboard() {
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/customers`);
+      const response = await fetch(`http://localhost:4000/api/customers`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.message || 'Failed to fetch customers');
@@ -196,8 +196,8 @@ export default function CustomerDashboard() {
     try {
       const submitData = { ...formData, ageYears: Number(formData.ageYears) };
       const url = mode === 'create'
-        ? 'http://localhost:5000/api/customers'
-        : `http://localhost:5000/api/customers/${selectedCustomer._id}`;
+        ? 'http://localhost:4000/api/customers'
+        : `http://localhost:4000/api/customers/${selectedCustomer._id}`;
 
       const response = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PUT',
@@ -224,7 +224,7 @@ export default function CustomerDashboard() {
     if (!window.confirm(`Are you sure you want to delete ${selectedCustomer.givenName} ${selectedCustomer.familyName}?`)) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/customers/${selectedCustomer._id}`, {
+      const response = await fetch(`http://localhost:4000/api/customers/${selectedCustomer._id}`, {
         method: 'DELETE'
       });
 

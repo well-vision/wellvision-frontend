@@ -32,7 +32,7 @@ const CustomerProfile = () => {
     const fetchCustomer = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:5000/api/customers/${customerId}`);
+        const res = await fetch(`http://localhost:4000/api/customers/${customerId}`);
         const data = await res.json();
 
         if (!res.ok) throw new Error(data.message || 'Failed to fetch customer');
@@ -141,7 +141,7 @@ const CustomerProfile = () => {
                     <button
                       onClick={async () => {
                         try {
-                          const res = await fetch(`http://localhost:5000/api/customers/${customer._id}`, {
+                          const res = await fetch(`http://localhost:4000/api/customers/${customer._id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(editForm),
