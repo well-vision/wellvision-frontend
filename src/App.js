@@ -1,71 +1,31 @@
 import React from 'react';
-import './App.css';
-import CustomerDashboard from './components/CustomerDashboard';
-import SalesDashboard from './components/SalesDashboard';
-import WellVisionInvoice from './components/WellVisionInvoice';
-import DashboardLayout from './components/DashboardLayout';
-import CustomerProfile from './components/CustomerProfile';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-  useNavigate,
-  Navigate,
-} from 'react-router-dom';
+import Login from './components/Login';
+import Register from './components/Register';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
+import SendVerifyOtp from './components/SendVerifyOtp';
+import VerifyOtp from './components/VerifyEmail';
 
-// Wrapper to include layout only for dashboard routes
-function AppWithLayout() {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  // Determine the active sidebar page based on the current path
-  const getActivePage = () => {
-  if (location.pathname.startsWith('/customers')) return 'customers';
-  if (location.pathname.startsWith('/customer/')) return 'customers'; // 👈 Add this line
-  if (location.pathname.startsWith('/invoice')) return 'invoice';
-  if (location.pathname.startsWith('/profile')) return 'profile';
-  return 'home';
-};
-
-
-  // Handle sidebar navigation clicks
-  const handleNavigate = (page) => {
-    switch (page) {
-      case 'customers':
-        navigate('/customers');
-        break;
-      case 'invoice':
-        navigate('/invoice');
-        break;
-      case 'profile':
-        navigate('/profile');
-        break;
-      default:
-        navigate('/');
-    }
-  };
-
-  return (
-    <DashboardLayout activePage={getActivePage()} onNavigate={handleNavigate}>
-      <Routes>
-        <Route path="/" element={<SalesDashboard />} />
-        <Route path="/customers" element={<CustomerDashboard />} />
-        <Route path="/customer/:customerId" element={<CustomerProfile />} />
-        <Route path="/invoice" element={<WellVisionInvoice />} />
-        <Route path="/profile" element={<SalesDashboard />} />
-        {/* Fallback route: redirect unknown paths to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </DashboardLayout>
-  );
-}
+import DashboardRoutes from './DashboardRoutes'; // ✅ use the correct one
 
 export default function App() {
   return (
     <Router>
-      <AppWithLayout />
+      <Routes>
+        {/* Public Auth Routes */}
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/send-verify-otp" element={<SendVerifyOtp />} />
+        <Route path="/verify-email" element={<VerifyOtp />} />
+
+        {/* Protected Dashboard Routes */}
+        <Route path="/*" element={<DashboardRoutes />} />
+      </Routes>
     </Router>
   );
 }
