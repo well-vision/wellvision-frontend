@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import './SidebarMenu.css';
 import {
   Home,
@@ -8,12 +8,17 @@ import {
   FileText,
   CreditCard,
   Settings,
-  User
+  User,
+  LogOut
 } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-export default function SidebarMenu({ active = 'home', onNavigate }) {
+export default function SidebarMenu({ active = 'home', onNavigate = () => {} }) {
+  const { user, logoutUser } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(true);
   const sidebarRef = useRef(null);
+  const navigate = useNavigate();
 
   const menuItems = [
     { label: 'Home', icon: <Home />, key: 'home' },
@@ -29,7 +34,7 @@ export default function SidebarMenu({ active = 'home', onNavigate }) {
     { label: 'Profile', icon: <User />, key: 'profile' }
   ];
 
-  // Close sidebar when clicking outside (mobile)
+  // Close sidebar when clicking outside
   useEffect(() => {
     function handleOutsideClick(e) {
       if (isOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
@@ -67,6 +72,18 @@ export default function SidebarMenu({ active = 'home', onNavigate }) {
       </div>
     ));
 
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    navigate('/login');
+  };
+
   return (
     <>
       {/* Hamburger for mobile */}
@@ -97,14 +114,29 @@ export default function SidebarMenu({ active = 'home', onNavigate }) {
           <br />
           <p className="menu-label">GENERAL</p>
           <div className="menu-nav">{renderNavItems(generalItems)}</div>
+
+          <br />
+          <p className="menu-label">ACCOUNT</p>
+          <div
+            className="menu-item"
+            onClick={handleLogout}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') handleLogout();
+            }}
+          >
+            <span className="menu-icon"><LogOut /></span>
+            Logout
+          </div>
         </div>
 
         <div className="user-profile">
           <div className="user-profile-content">
-            <div className="user-avatar">JD</div>
+            <div className="user-avatar">{getInitials(user?.name)}</div>
             <div className="user-info">
-              <p className="user-name">Jane Dolle</p>
-              <p className="user-email">janeadmin@example.com</p>
+              <p className="user-name">{user?.name || 'User'}</p>
+              <p className="user-email">{user?.email || 'user@example.com'}</p>
             </div>
           </div>
         </div>

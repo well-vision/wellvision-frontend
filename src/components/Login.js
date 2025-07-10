@@ -26,7 +26,7 @@ function Login() {
 
       if (res.ok && data.success) {
         // Backend only returns success boolean, so just mark logged in
-        loginUser(true);  // or pass user data if you get any in future
+        loginUser(data.user);  // or pass user data if you get any in future
         navigate('/dashboard'); // redirect on successful login
       } else {
         setMessage(data.message || 'Login failed');
