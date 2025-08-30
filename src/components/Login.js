@@ -3,12 +3,18 @@ import './Login.css';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
+// Import Redux
+import { useDispatch } from 'react-redux';
+import { setUser } from '../admin_components/userSlice';  // Adjust path if needed
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const { loginUser } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const dispatch = useDispatch();  // Redux dispatcher
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,15 +25,27 @@ function Login() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-        credentials: 'include',  // important for cookies
+        credentials: 'include',
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
-        // Backend only returns success boolean, so just mark logged in
-        loginUser(data.user);  // or pass user data if you get any in future
-        navigate('/dashboard'); // redirect on successful login
+        loginUser(data.user);  // save to AuthContext/localStorage
+
+        // Also dispatch user data to Redux store
+        dispatch(setUser({
+          userId: data.user._id || data.user.id || null,
+          email: data.user.email,
+          isAdmin: data.user.role === 'admin' || data.user.role === 'superadmin',
+        }));
+
+        // Redirect based on role
+        if (data.user.role === 'admin' || data.user.role === 'superadmin') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setMessage(data.message || 'Login failed');
       }

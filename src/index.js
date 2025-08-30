@@ -3,12 +3,12 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 
-// Import AuthProvider to manage authentication state
-import { AuthProvider } from './context/AuthContext'; // ✅ Adjust if path differs
+import { AuthProvider } from './context/AuthContext';
+import { Provider } from 'react-redux';
+import store  from './admin_components/store';
 
 const App = lazy(() => import('./App'));
 
-// Simple Error Boundary component
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -33,18 +33,14 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <Suspense fallback={<div>Loading...</div>}>
-        <AuthProvider> {/* ✅ Wrap App in AuthProvider */}
-          <App />
-        </AuthProvider>
+        <Provider store={store}>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </Provider>
       </Suspense>
     </ErrorBoundary>
   </React.StrictMode>
 );
 
-// Report web vitals with console logging
-function sendToAnalytics(metric) {
-  console.log('Web Vitals:', metric);
-  // Optionally send this data to analytics backend
-}
-
-reportWebVitals(sendToAnalytics);
+reportWebVitals(console.log);
