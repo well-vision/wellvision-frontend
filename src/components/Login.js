@@ -24,10 +24,15 @@ function Login() {
 
       const data = await res.json();
 
-      if (res.ok && data.success) {
-        // Backend only returns success boolean, so just mark logged in
-        loginUser(data.user);  // or pass user data if you get any in future
-        navigate('/dashboard'); // redirect on successful login
+      if (res.ok && data.success && data.user) {
+        loginUser(data.user); // store user in context
+
+        // ✅ Redirect based on role
+        if (data.user.role === 'admin') {
+          navigate('/admin/dashboard'); // admin dashboard
+        } else {
+          navigate('/dashboard'); // normal dashboard
+        }
       } else {
         setMessage(data.message || 'Login failed');
       }

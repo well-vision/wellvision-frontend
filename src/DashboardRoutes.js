@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from './context/AuthContext'; // Make sure path is correct
+
+// Normal user components
 import DashboardLayout from './components/DashboardLayout';
 import PrivateRoute from './components/PrivateRoute';
 import SalesDashboard from './components/SalesDashboard';
@@ -7,10 +10,52 @@ import CustomerDashboard from './components/CustomerDashboard';
 import CustomerProfile from './components/CustomerProfile';
 import WellVisionInvoice from './components/WellVisionInvoice';
 
+// Admin components
+import AdminLayout from './admin/scenes/layout';
+import AdminDashboard from './admin/scenes/dashboard';
+import Products from './admin/scenes/products';
+import Customers from './admin/scenes/customers';
+import Transactions from './admin/scenes/transactions';
+import Geography from './admin/scenes/geography';
+import Overview from './admin/scenes/overview';
+import Daily from './admin/scenes/daily';
+import Monthly from './admin/scenes/monthly';
+import Breakdown from './admin/scenes/breakdown';
+import Admin from './admin/scenes/admin';
+import Performance from './admin/scenes/performance';
+
 export default function DashboardRoutes() {
+  const { user } = useContext(AuthContext); // Get logged-in user
   const location = useLocation();
   const navigate = useNavigate();
 
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // If admin, render admin routes
+  if (user.role === 'admin') {
+    return (
+      <Routes>
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<Products />} />
+          <Route path="customers" element={<Customers />} />
+          <Route path="transactions" element={<Transactions />} />
+          <Route path="geography" element={<Geography />} />
+          <Route path="overview" element={<Overview />} />
+          <Route path="daily" element={<Daily />} />
+          <Route path="monthly" element={<Monthly />} />
+          <Route path="breakdown" element={<Breakdown />} />
+          <Route path="admin" element={<Admin />} />
+          <Route path="performance" element={<Performance />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+        </Route>
+      </Routes>
+    );
+  }
+
+  // Otherwise, normal user routes
   const getActivePage = () => {
     if (location.pathname.startsWith('/customers')) return 'customers';
     if (location.pathname.startsWith('/customer/')) return 'customers';
