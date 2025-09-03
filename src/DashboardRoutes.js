@@ -6,6 +6,7 @@ import SalesDashboard from './components/SalesDashboard';
 import CustomerDashboard from './components/CustomerDashboard';
 import CustomerProfile from './components/CustomerProfile';
 import WellVisionInvoice from './components/WellVisionInvoice';
+import ProfilePage from './components/ProfilePage';
 
 export default function DashboardRoutes() {
   const location = useLocation();
@@ -43,7 +44,7 @@ export default function DashboardRoutes() {
         <Route path="/customers" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
         <Route path="/customer/:customerId" element={<PrivateRoute><CustomerProfile /></PrivateRoute>} />
         <Route path="/invoice" element={<PrivateRoute><WellVisionInvoice /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><SalesDashboard /></PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </DashboardLayout>

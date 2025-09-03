@@ -1,0 +1,154 @@
+/* Scoped styles for the logged-in user's ProfilePage to avoid conflicts with CustomerProfile */
+.user-profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
+.user-profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-profile-edit-btn {
+  background-color: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.user-profile-card {
+  display: flex;
+  gap: 24px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  max-width: 900px;
+  width: 100%;
+}
+
+.user-profile-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-profile-image img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e9ecef;
+}
+
+.user-photo-edit {
+  display: flex;
+  gap: 8px;
+}
+
+.user-photo-edit button {
+  padding: 8px 12px;
+  border: none;
+  background: #0d6efd;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.user-photo-edit button.secondary {
+  background: #6c757d;
+}
+
+.user-profile-details h2 {
+  margin: 0;
+}
+
+.user-profile-details .user-role {
+  color: #6c757d;
+  margin: 6px 0 16px 0;
+}
+
+.user-profile-details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-profile-details-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f3f4;
+  vertical-align: top;
+}
+
+.user-profile-details-table td:first-child {
+  width: 200px;
+  color: #495057;
+  background: #f8f9fa;
+  font-weight: 500;
+}
+
+.user-profile-details-table input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  outline: none;
+}
+
+.user-profile-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.user-profile-actions button {
+  padding: 10px 14px;
+  border: none;
+  background: #0d6efd;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.user-profile-actions button.secondary {
+  background: #6c757d;
+}
+
+.user-profile-actions button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.user-profile-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #dc3545;
+}
+
+.user-profile-message {
+  margin-top: 10px;
+  color: #198754;
+}
+
+.user-profile-hint {
+  font-size: 12px;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .user-profile-card {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .user-profile-image img {
+    width: 120px;
+    height: 120px;
+  }
+}
