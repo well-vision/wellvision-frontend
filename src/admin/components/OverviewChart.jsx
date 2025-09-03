@@ -8,7 +8,7 @@ const OverviewChart = ({ isDashboard = false, view }) => {
   const { data, isLoading } = useGetSalesQuery();
 
   const [totalSalesLine, totalUnitsLine] = useMemo(() => {
-    if (!data) return [];
+    if (!data || !data.monthlyData) return [[], []];
 
     const { monthlyData } = data;
     const totalSalesLine = {
@@ -22,27 +22,32 @@ const OverviewChart = ({ isDashboard = false, view }) => {
       data: [],
     };
 
-    Object.values(monthlyData).reduce(
-      (acc, { month, totalSales, totalUnits }) => {
-        const curSales = acc.sales + totalSales;
-        const curUnits = acc.units + totalUnits;
+    try {
+      Object.values(monthlyData).reduce(
+        (acc, { month, totalSales, totalUnits }) => {
+          const curSales = acc.sales + (totalSales || 0);
+          const curUnits = acc.units + (totalUnits || 0);
 
-        totalSalesLine.data = [
-          ...totalSalesLine.data,
-          { x: month, y: curSales },
-        ];
-        totalUnitsLine.data = [
-          ...totalUnitsLine.data,
-          { x: month, y: curUnits },
-        ];
+          totalSalesLine.data = [
+            ...totalSalesLine.data,
+            { x: month, y: curSales },
+          ];
+          totalUnitsLine.data = [
+            ...totalUnitsLine.data,
+            { x: month, y: curUnits },
+          ];
 
-        return { sales: curSales, units: curUnits };
-      },
-      { sales: 0, units: 0 }
-    );
+          return { sales: curSales, units: curUnits };
+        },
+        { sales: 0, units: 0 }
+      );
+    } catch (error) {
+      console.error("Error processing chart data:", error);
+      return [[], []];
+    }
 
     return [[totalSalesLine], [totalUnitsLine]];
-  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, theme.palette.secondary]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!data || isLoading) return "Loading...";
 

@@ -1,13 +1,13 @@
 import React from "react";
-import { Box, useTheme } from "@mui/material";
+import { Box, useTheme, Typography } from "@mui/material";
 import { useGetCustomersQuery } from "../../state/api";
 import Header from "../../components/Header";
 import { DataGrid } from "@mui/x-data-grid";
 
 const Customers = () => {
   const theme = useTheme();
-  const { data, isLoading } = useGetCustomersQuery();
-  console.log("data", data);
+  const { data, isLoading, error } = useGetCustomersQuery();
+  console.log("customers data", data);
 
   const columns = [
     {
@@ -30,7 +30,12 @@ const Customers = () => {
       headerName: "Phone Number",
       flex: 0.5,
       renderCell: (params) => {
-        return params.value.replace(/^(\d{3})(\d{3})(\d{4})/, "($1)$2-$3");
+        if (!params.value) return "N/A";
+        const phoneStr = params.value.toString();
+        if (phoneStr.length === 10) {
+          return phoneStr.replace(/^(\d{3})(\d{3})(\d{4})/, "($1)$2-$3");
+        }
+        return phoneStr;
       },
     },
     {
@@ -49,6 +54,39 @@ const Customers = () => {
       flex: 0.5,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <Box m="1.5rem 2.5rem">
+        <Header title="CUSTOMERS" subtitle="List of Customers" />
+        <Typography variant="h6" sx={{ mt: "20px" }}>
+          Loading customers...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box m="1.5rem 2.5rem">
+        <Header title="CUSTOMERS" subtitle="List of Customers" />
+        <Typography variant="h6" color="error" sx={{ mt: "20px" }}>
+          Error loading customers: {error.message || 'Unknown error'}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <Box m="1.5rem 2.5rem">
+        <Header title="CUSTOMERS" subtitle="List of Customers" />
+        <Typography variant="h6" sx={{ mt: "20px" }}>
+          No customers found
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box m="1.5rem 2.5rem">
@@ -82,9 +120,9 @@ const Customers = () => {
         }}
       >
         <DataGrid
-          loading={isLoading || !data}
+          loading={false}
           getRowId={(row) => row._id}
-          rows={data || []}
+          rows={data}
           columns={columns}
         />
       </Box>

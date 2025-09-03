@@ -15,14 +15,38 @@ const BreakdownChart = ({ isDashboard = false }) => {
     theme.palette.secondary[300],
     theme.palette.secondary[500],
   ];
-  const formattedData = Object.entries(data.salesByCategory).map(
-    ([category, sales], i) => ({
-      id: category,
-      label: category,
-      value: sales,
-      color: colors[i],
-    })
-  );
+  
+  let formattedData = [];
+  try {
+    if (data.salesByCategory) {
+      formattedData = Object.entries(data.salesByCategory).map(
+        ([category, sales], i) => ({
+          id: category,
+          label: category,
+          value: sales || 0,
+          color: colors[i % colors.length],
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Error formatting breakdown chart data:", error);
+    formattedData = [];
+  }
+
+  if (formattedData.length === 0) {
+    return (
+      <Box
+        height={isDashboard ? "400px" : "100%"}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Typography variant="h6" color={theme.palette.secondary[200]}>
+          No data available
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -130,7 +154,7 @@ const BreakdownChart = ({ isDashboard = false }) => {
         }}
       >
         <Typography variant="h6">
-          {!isDashboard && "Total:"} ${data.yearlySalesTotal}
+          {!isDashboard && "Total:"} ${data?.yearlySalesTotal || 0}
         </Typography>
       </Box>
     </Box>

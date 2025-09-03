@@ -9,7 +9,7 @@ const Monthly = () => {
   const theme = useTheme();
 
   const [formattedData] = useMemo(() => {
-    if (!data) return [];
+    if (!data || !data.monthlyData) return [];
 
     const { monthlyData } = data;
     const totalSalesLine = {
@@ -23,16 +23,21 @@ const Monthly = () => {
       data: [],
     };
 
-    Object.values(monthlyData).forEach(({ month, totalSales, totalUnits }) => {
-      totalSalesLine.data = [
-        ...totalSalesLine.data,
-        { x: month, y: totalSales },
-      ];
-      totalUnitsLine.data = [
-        ...totalUnitsLine.data,
-        { x: month, y: totalUnits },
-      ];
-    });
+    try {
+      Object.values(monthlyData).forEach(({ month, totalSales, totalUnits }) => {
+        totalSalesLine.data = [
+          ...totalSalesLine.data,
+          { x: month, y: totalSales || 0 },
+        ];
+        totalUnitsLine.data = [
+          ...totalUnitsLine.data,
+          { x: month, y: totalUnits || 0 },
+        ];
+      });
+    } catch (error) {
+      console.error("Error processing monthly chart data:", error);
+      return [];
+    }
 
     const formattedData = [totalSalesLine, totalUnitsLine];
     return [formattedData];

@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, useTheme } from "@mui/material";
+import { Box, useTheme, Typography } from "@mui/material";
 import { useGetAdminsQuery } from "../../state/api"; // Changed path
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header"; // Changed path
@@ -7,7 +7,7 @@ import CustomColumnMenu from "../../components/DataGridCustomColumnMenu"; // Cha
 
 const Admin = () => {
   const theme = useTheme();
-  const { data, isLoading } = useGetAdminsQuery();
+  const { data, isLoading, error } = useGetAdminsQuery();
 
   const columns = [
     {
@@ -30,7 +30,12 @@ const Admin = () => {
       headerName: "Phone Number",
       flex: 0.5,
       renderCell: (params) => {
-        return params.value.replace(/^(\d{3})(\d{3})(\d{4})/, "($1)$2-$3");
+        if (!params.value) return "N/A";
+        const phoneStr = params.value.toString();
+        if (phoneStr.length === 10) {
+          return phoneStr.replace(/^(\d{3})(\d{3})(\d{4})/, "($1)$2-$3");
+        }
+        return phoneStr;
       },
     },
     {
@@ -49,6 +54,39 @@ const Admin = () => {
       flex: 0.5,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <Box m="1.5rem 2.5rem">
+        <Header title="ADMINS" subtitle="Managing admins and list of admins" />
+        <Typography variant="h6" sx={{ mt: "20px" }}>
+          Loading admins...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box m="1.5rem 2.5rem">
+        <Header title="ADMINS" subtitle="Managing admins and list of admins" />
+        <Typography variant="h6" color="error" sx={{ mt: "20px" }}>
+          Error loading admins: {error.message || 'Unknown error'}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <Box m="1.5rem 2.5rem">
+        <Header title="ADMINS" subtitle="Managing admins and list of admins" />
+        <Typography variant="h6" sx={{ mt: "20px" }}>
+          No admins found
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box m="1.5rem 2.5rem">
@@ -82,9 +120,9 @@ const Admin = () => {
         }}
       >
         <DataGrid
-          loading={isLoading || !data}
+          loading={false}
           getRowId={(row) => row._id}
-          rows={data || []}
+          rows={data}
           columns={columns}
           components={{
             ColumnMenu: CustomColumnMenu,

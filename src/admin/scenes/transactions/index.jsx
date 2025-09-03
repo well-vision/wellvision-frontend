@@ -43,13 +43,13 @@ const Transactions = () => {
       headerName: "# of Products",
       flex: 0.5,
       sortable: false,
-      renderCell: (params) => params.value.length,
+      renderCell: (params) => params.value?.length || 0,
     },
     {
       field: "cost",
       headerName: "Cost",
       flex: 1,
-      renderCell: (params) => `$${Number(params.value).toFixed(2)}`,
+      renderCell: (params) => `$${Number(params.value || 0).toFixed(2)}`,
     },
   ];
 

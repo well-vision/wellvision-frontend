@@ -13,7 +13,7 @@ const Daily = () => {
   const theme = useTheme();
 
   const [formattedData] = useMemo(() => {
-    if (!data) return [];
+    if (!data || !data.dailyData) return [];
 
     const { dailyData } = data;
     const totalSalesLine = {
@@ -27,21 +27,26 @@ const Daily = () => {
       data: [],
     };
 
-    Object.values(dailyData).forEach(({ date, totalSales, totalUnits }) => {
-      const dateFormatted = new Date(date);
-      if (dateFormatted >= startDate && dateFormatted <= endDate) {
-        const splitDate = date.substring(date.indexOf("-") + 1);
+    try {
+      Object.values(dailyData).forEach(({ date, totalSales, totalUnits }) => {
+        const dateFormatted = new Date(date);
+        if (dateFormatted >= startDate && dateFormatted <= endDate) {
+          const splitDate = date.substring(date.indexOf("-") + 1);
 
-        totalSalesLine.data = [
-          ...totalSalesLine.data,
-          { x: splitDate, y: totalSales },
-        ];
-        totalUnitsLine.data = [
-          ...totalUnitsLine.data,
-          { x: splitDate, y: totalUnits },
-        ];
-      }
-    });
+          totalSalesLine.data = [
+            ...totalSalesLine.data,
+            { x: splitDate, y: totalSales || 0 },
+          ];
+          totalUnitsLine.data = [
+            ...totalUnitsLine.data,
+            { x: splitDate, y: totalUnits || 0 },
+          ];
+        }
+      });
+    } catch (error) {
+      console.error("Error processing daily chart data:", error);
+      return [];
+    }
 
     const formattedData = [totalSalesLine, totalUnitsLine];
     return [formattedData];

@@ -24,7 +24,27 @@ import StatBox from "../../components/StatBox";
 const Dashboard = () => {
   const theme = useTheme();
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
-  const { data, isLoading } = useGetDashboardQuery();
+  const { data, isLoading, error } = useGetDashboardQuery();
+
+  if (isLoading) {
+    return (
+      <Box m="1.5rem 2.5rem">
+        <Typography variant="h4" color={theme.palette.secondary[100]}>
+          Loading Dashboard...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box m="1.5rem 2.5rem">
+        <Typography variant="h4" color="error">
+          Error loading dashboard: {error.message || 'Unknown error'}
+        </Typography>
+      </Box>
+    );
+  }
 
   const columns = [
     {
@@ -47,13 +67,13 @@ const Dashboard = () => {
       headerName: "# of Products",
       flex: 0.5,
       sortable: false,
-      renderCell: (params) => params.value.length,
+      renderCell: (params) => params.value?.length || 0,
     },
     {
       field: "cost",
       headerName: "Cost",
       flex: 1,
-      renderCell: (params) => `$${Number(params.value).toFixed(2)}`,
+      renderCell: (params) => `$${Number(params.value || 0).toFixed(2)}`,
     },
   ];
 
@@ -91,7 +111,7 @@ const Dashboard = () => {
         {/* ROW 1 */}
         <StatBox
           title="Total Customers"
-          value={data && data.totalCustomers}
+          value={data?.totalCustomers || 0}
           increase="+14%"
           description="Since last month"
           icon={
@@ -102,7 +122,7 @@ const Dashboard = () => {
         />
         <StatBox
           title="Sales Today"
-          value={data && data.todayStats.totalSales}
+          value={data?.todayStats?.totalSales || 0}
           increase="+21%"
           description="Since last month"
           icon={
@@ -122,7 +142,7 @@ const Dashboard = () => {
         </Box>
         <StatBox
           title="Monthly Sales"
-          value={data && data.thisMonthStats.totalSales}
+          value={data?.thisMonthStats?.totalSales || 0}
           increase="+5%"
           description="Since last month"
           icon={
@@ -133,7 +153,7 @@ const Dashboard = () => {
         />
         <StatBox
           title="Yearly Sales"
-          value={data && data.yearlySalesTotal}
+          value={data?.yearlySalesTotal || 0}
           increase="+43%"
           description="Since last month"
           icon={
