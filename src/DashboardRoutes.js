@@ -3,12 +3,12 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { AuthContext } from './context/AuthContext'; // Make sure path is correct
 
 // Normal user components
-import DashboardLayout from './components/DashboardLayout';
+import UserLayout from './components/UserLayout';
 import PrivateRoute from './components/PrivateRoute';
-import SalesDashboard from './components/SalesDashboard';
-import CustomerDashboard from './components/CustomerDashboard';
-import CustomerProfile from './components/CustomerProfile';
-import WellVisionInvoice from './components/WellVisionInvoice';
+import UserSalesDashboard from './components/UserSalesDashboard';
+import UserCustomerDashboard from './components/UserCustomerDashboard';
+import UserCustomerProfile from './components/UserCustomerProfile';
+import UserWellVisionInvoice from './components/UserWellVisionInvoice';
 
 // Admin components
 import AdminLayout from './admin/scenes/layout';
@@ -82,15 +82,15 @@ export default function DashboardRoutes() {
   };
 
   return (
-    <DashboardLayout activePage={getActivePage()} onNavigate={handleNavigate}>
+    <UserLayout activePage={getActivePage()} onNavigate={handleNavigate}>
       <Routes>
-        <Route path="/dashboard" element={<PrivateRoute><SalesDashboard /></PrivateRoute>} />
-        <Route path="/customers" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
-        <Route path="/customer/:customerId" element={<PrivateRoute><CustomerProfile /></PrivateRoute>} />
-        <Route path="/invoice" element={<PrivateRoute><WellVisionInvoice /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><SalesDashboard /></PrivateRoute>} />
+        <Route path="/dashboard" element={<PrivateRoute><UserSalesDashboard /></PrivateRoute>} />
+        <Route path="/customers" element={<PrivateRoute><UserCustomerDashboard /></PrivateRoute>} />
+        <Route path="/customer/:customerId" element={<PrivateRoute><UserCustomerProfile /></PrivateRoute>} />
+        <Route path="/invoice" element={<PrivateRoute><UserWellVisionInvoice /></PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute><UserSalesDashboard /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </DashboardLayout>
+    </UserLayout>
   );
 }
