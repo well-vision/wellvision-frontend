@@ -1,6 +1,8 @@
-    import React, { useContext, useMemo, useRef, useState } from "react";
+    import React, { useContext, useMemo, useRef, useState, useEffect } from "react";
     import "./ProfilePage.css";
     import { AuthContext } from "../context/AuthContext";
+
+    const DEFAULT_AVATAR = `${process.env.PUBLIC_URL}/default_profile_picturre.jpeg`;
 
     const ProfilePage = () => {
     const { user, loginUser } = useContext(AuthContext);
@@ -10,7 +12,7 @@
         email: user?.email || "",
         phone: user?.phone || "",
         role: user?.role || "",
-        profilePic: user?.profilePic || "",
+        profilePic: user?.profilePic || user?.avatar || DEFAULT_AVATAR,
     }), [user]);
 
     const [isEditing, setIsEditing] = useState(false);
@@ -19,6 +21,31 @@
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
     const fileInputRef = useRef(null);
+
+    // On mount, fetch profile from backend to ensure latest data
+    useEffect(() => {
+        const loadProfile = async () => {
+        try {
+            const res = await fetch('http://localhost:4000/api/user/profile', {
+            method: 'GET',
+            credentials: 'include',
+            });
+            const data = await res.json();
+            if (res.ok && data.success && data.user) {
+            const updated = {
+                ...user,
+                ...data.user,
+                profilePic: data.user.avatar || DEFAULT_AVATAR,
+            };
+            loginUser(updated);
+            }
+        } catch (e) {
+            // ignore; unauthenticated will be handled by PrivateRoute
+        }
+        };
+        loadProfile();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const onEdit = () => {
         setForm(initial);
@@ -55,13 +82,28 @@
         setSaving(true);
         setMessage("");
         try {
-        // If there is a backend endpoint, call it here. For now, persist in AuthContext/localStorage.
-        const updated = { ...user, ...form };
+        // Call backend to persist changes
+        const res = await fetch('http://localhost:4000/api/user/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // send cookie token
+            body: JSON.stringify({
+            name: form.name,
+            phone: form.phone,
+            role: form.role,
+            avatar: form.profilePic,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || 'Save failed');
+
+        const updated = { ...user, ...data.user, profilePic: data.user?.avatar || DEFAULT_AVATAR };
         loginUser(updated); // updates context + localStorage
         setMessage("Profile updated successfully.");
         setIsEditing(false);
         } catch (err) {
-        setMessage("Failed to update profile.");
+        console.error(err);
+        setMessage(err.message || "Failed to update profile.");
         } finally {
         setSaving(false);
         }
@@ -79,7 +121,14 @@
         const reader = new FileReader();
         reader.onload = () => {
         // Save as data URL for preview and persistence
-        setForm((prev) => ({ ...prev, profilePic: reader.result }));
+        const dataUrl = reader.result;
+        // Optional: limit very large images to avoid exceeding cookie/localStorage/JWT storage
+        const maxSize = 1024 * 1024 * 1.5; // ~1.5MB
+        if (typeof dataUrl === 'string' && dataUrl.length > maxSize * 1.37) {
+            setMessage('Image too large. Please choose a smaller one.');
+            return;
+        }
+        setForm((prev) => ({ ...prev, profilePic: dataUrl }));
         setMessage("");
         };
         reader.onerror = () => setMessage("Failed to read the selected file.");
@@ -91,7 +140,7 @@
         email: user?.email || "user@example.com",
         role: user?.role || "Member",
         phone: user?.phone || "-",
-        profilePic: user?.profilePic || "https://via.placeholder.com/150",
+        profilePic: user?.profilePic || user?.avatar || DEFAULT_AVATAR,
     };
 
     return (
@@ -108,11 +157,19 @@
             <img src={isEditing ? (form.profilePic || display.profilePic) : display.profilePic} alt="Profile" />
             {isEditing && (
                 <div className="user-photo-edit">
-                <button type="button" onClick={onPickPhoto}>Change Photo</button>
-                {form.profilePic && (
-                    <button type="button" className="secondary" onClick={() => setForm((p) => ({ ...p, profilePic: "" }))}>
-                    Remove
+                {form.profilePic === DEFAULT_AVATAR ? (
+                    <button type="button" onClick={onPickPhoto}>Add Image</button>
+                ) : (
+                    <>
+                    <button type="button" onClick={onPickPhoto}>Change Photo</button>
+                    <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => setForm((p) => ({ ...p, profilePic: DEFAULT_AVATAR }))}
+                    >
+                        Remove
                     </button>
+                    </>
                 )}
                 <input
                     ref={fileInputRef}
