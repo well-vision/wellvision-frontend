@@ -14,7 +14,7 @@ import {
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-export default function SidebarMenu({ active = 'home', onNavigate = () => {} }) {
+export default function SidebarMenu({ active = 'home' }) {
   const { user, logoutUser } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(true);
   const sidebarRef = useRef(null);
@@ -34,7 +34,6 @@ export default function SidebarMenu({ active = 'home', onNavigate = () => {} }) 
     { label: 'Profile', icon: <User />, key: 'profile' }
   ];
 
-  // Close sidebar when clicking outside
   useEffect(() => {
     function handleOutsideClick(e) {
       if (isOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
@@ -48,7 +47,7 @@ export default function SidebarMenu({ active = 'home', onNavigate = () => {} }) 
   const onKeyDown = (e, key) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onNavigate(key);
+      navigate(`/${key}`);
       setIsOpen(false);
     }
   };
@@ -59,7 +58,7 @@ export default function SidebarMenu({ active = 'home', onNavigate = () => {} }) 
         key={item.key}
         className={`menu-item ${active === item.key ? 'active' : ''}`}
         onClick={() => {
-          onNavigate(item.key);
+          navigate(`/${item.key}`);
           setIsOpen(false);
         }}
         role="link"
@@ -86,7 +85,6 @@ export default function SidebarMenu({ active = 'home', onNavigate = () => {} }) 
 
   return (
     <>
-      {/* Hamburger for mobile */}
       <button
         className="sidebar-toggle"
         aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
@@ -131,7 +129,16 @@ export default function SidebarMenu({ active = 'home', onNavigate = () => {} }) 
           </div>
         </div>
 
-        <div className="user-profile">
+        <div
+          className="user-profile"
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/profile')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') navigate('/profile');
+          }}
+          aria-label="Open profile"
+        >
           <div className="user-profile-content">
             <div className="user-avatar">{getInitials(user?.name)}</div>
             <div className="user-info">
