@@ -1,29 +1,69 @@
-import React, { useContext, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import "./ProfilePage.css";
 import { AuthContext } from "../context/AuthContext";
 
 const ProfilePage = () => {
   const { user, loginUser } = useContext(AuthContext);
 
-  const initial = useMemo(() => ({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    role: user?.role || "",
-    profilePic: user?.profilePic || "",
-  }), [user]);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "",
+    profilePic: "",
+  });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef(null);
 
+  // Fetch profile from backend on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("http://localhost:4000/api/user/profile", {
+          method: "GET",
+          credentials: "include", // if JWT cookie used
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to load profile");
+
+        setForm({
+          name: data.user.name || "",
+          email: data.user.email || "",
+          phone: data.user.phone || "",
+          role: data.user.role || "",
+          profilePic: data.user.profilePic || "",
+        });
+
+        loginUser({ ...user, ...data.user }); // keep AuthContext synced
+      } catch (err) {
+        console.error("Profile fetch error:", err.message);
+        setMessage("Could not load profile.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user, loginUser]);
+
+  const initial = useMemo(() => form, [form]);
+
   const onEdit = () => {
-    setForm(initial);
     setErrors({});
     setMessage("");
+    setForm((prev) => ({
+      name: prev.name || user?.name || "",
+      email: prev.email || user?.email || "",
+      phone: prev.phone || user?.phone || "",
+      role: prev.role || user?.role || "",
+      profilePic: prev.profilePic || user?.profilePic || "",
+    }));
     setIsEditing(true);
   };
 
@@ -55,13 +95,32 @@ const ProfilePage = () => {
     setSaving(true);
     setMessage("");
     try {
-      // If there is a backend endpoint, call it here. For now, persist in AuthContext/localStorage.
-      const updated = { ...user, ...form };
-      loginUser(updated); // updates context + localStorage
+      const res = await fetch("http://localhost:4000/api/user/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
+        body: JSON.stringify(form),
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Update failed");
+
+      loginUser({ ...user, ...data.user }); // update AuthContext
+      setForm({
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone,
+        role: data.user.role,
+        profilePic: data.user.profilePic,
+      });
+
       setMessage("Profile updated successfully.");
       setIsEditing(false);
     } catch (err) {
-      setMessage("Failed to update profile.");
+      setMessage(err.message || "Failed to update profile.");
     } finally {
       setSaving(false);
     }
@@ -78,7 +137,6 @@ const ProfilePage = () => {
     }
     const reader = new FileReader();
     reader.onload = () => {
-      // Save as data URL for preview and persistence
       setForm((prev) => ({ ...prev, profilePic: reader.result }));
       setMessage("");
     };
@@ -87,30 +145,43 @@ const ProfilePage = () => {
   };
 
   const display = {
-    name: user?.name || "User",
-    email: user?.email || "user@example.com",
-    role: user?.role || "Member",
-    phone: user?.phone || "-",
-    profilePic: user?.profilePic || "https://via.placeholder.com/150",
+    name: form.name || "User",
+    email: form.email || "user@example.com",
+    role: form.role || "Member",
+    phone: form.phone || "-",
+    profilePic: form.profilePic || "https://via.placeholder.com/150",
   };
+
+  if (loading) {
+    return <div className="user-profile-page"><p>Loading profile...</p></div>;
+  }
 
   return (
     <div className="user-profile-page">
       <div className="user-profile-header">
         <h2>My Profile</h2>
         {!isEditing && (
-          <button className="user-profile-edit-btn" onClick={onEdit}>Edit Profile</button>
+          <button className="user-profile-edit-btn" onClick={onEdit}>
+            Edit Profile
+          </button>
         )}
       </div>
 
       <div className="user-profile-card">
         <div className="user-profile-image">
-          <img src={isEditing ? (form.profilePic || display.profilePic) : display.profilePic} alt="Profile" />
+          <img
+            src={isEditing ? (form.profilePic || display.profilePic) : display.profilePic}
+            alt="Profile"
+          />
           {isEditing && (
             <div className="user-photo-edit">
               <button type="button" onClick={onPickPhoto}>Change Photo</button>
               {form.profilePic && (
-                <button type="button" className="secondary" onClick={() => setForm((p) => ({ ...p, profilePic: "" }))}>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setForm((p) => ({ ...p, profilePic: "" }))}
+                >
                   Remove
                 </button>
               )}
@@ -124,6 +195,7 @@ const ProfilePage = () => {
             </div>
           )}
         </div>
+
         <div className="user-profile-details">
           {!isEditing ? (
             <>
@@ -191,11 +263,7 @@ const ProfilePage = () => {
                   <tr>
                     <td><strong>Role</strong></td>
                     <td>
-                      <select 
-                        name="role" 
-                        value={form.role} 
-                        onChange={onChange}
-                      >
+                      <select name="role" value={form.role} onChange={onChange}>
                         <option value="">Select role</option>
                         <option value="Cashier">Cashier</option>
                         <option value="Admin">Admin</option>
@@ -218,8 +286,12 @@ const ProfilePage = () => {
               </table>
 
               <div className="user-profile-actions">
-                <button onClick={onSave} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
-                <button className="secondary" onClick={onCancel} disabled={saving}>Cancel</button>
+                <button onClick={onSave} disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button className="secondary" onClick={onCancel} disabled={saving}>
+                  Cancel
+                </button>
               </div>
             </>
           )}
@@ -228,7 +300,9 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      <p className="user-profile-hint">Tip: Selecting a photo stores it locally. Large images may exceed browser storage limits.</p>
+      <p className="user-profile-hint">
+        Tip: Selecting a photo stores it locally and updates backend. Large images may exceed browser storage limits.
+      </p>
     </div>
   );
 };
