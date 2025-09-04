@@ -309,13 +309,13 @@ const UserCustomerDashboard = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredCustomers.map((customer) => (
-                  <TableRow 
+                (Array.isArray(filteredCustomers) ? filteredCustomers : []).map((customer) => (
+                  <TableRow
                     key={customer._id}
-                    sx={{ 
+                    sx={{
                       cursor: 'pointer',
-                      '&:hover': { 
-                        backgroundColor: theme.palette.primary[800] 
+                      '&:hover': {
+                        backgroundColor: theme.palette.primary[800]
                       }
                     }}
                     onClick={() => handleCustomerClick(customer._id)}
@@ -329,9 +329,9 @@ const UserCustomerDashboard = () => {
                           </Typography>
                           <Typography variant="body2" color={theme.palette.secondary[300]}>
                             {customer.gender && (
-                              <Chip 
-                                label={customer.gender} 
-                                size="small" 
+                              <Chip
+                                label={customer.gender}
+                                size="small"
                                 sx={{ mr: 1, fontSize: '0.7rem' }}
                               />
                             )}
@@ -367,7 +367,7 @@ const UserCustomerDashboard = () => {
                     </TableCell>
                     <TableCell>
                       <Box display="flex" gap="5px">
-                        <IconButton 
+                        <IconButton
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -376,7 +376,7 @@ const UserCustomerDashboard = () => {
                         >
                           <Edit sx={{ fontSize: '18px' }} />
                         </IconButton>
-                        <IconButton 
+                        <IconButton
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
