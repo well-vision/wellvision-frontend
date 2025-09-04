@@ -1,0 +1,365 @@
+/* Settings.css - Advanced styling for Settings page */
+
+/* Theme variables */
+:root {
+  --bg: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --card-bg: #ffffff;
+  --primary: #007bff;
+  --primary-contrast: #ffffff;
+  --success-bg: #d4edda;
+  --success-text: #155724;
+  --success-border: #c3e6cb;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+  --tab-hover-bg: #f5f5f5;
+}
+
+.theme-dark {
+  --bg: #121212;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #2d2d2d;
+  --card-bg: #1e1e1e;
+  --primary: #3b82f6;
+  --primary-contrast: #ffffff;
+  --success-bg: #1e3a2e;
+  --success-text: #a8d5ba;
+  --success-border: #2d5a3d;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --tab-hover-bg: #262626;
+}
+
+/* Page */
+.settings-page {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+  padding: calc(var(--density) * 2) calc(var(--density) * 2) calc(var(--density) * 3); /* responsive to density */
+  background-color: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: auto;
+}
+
+/* Header */
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-actions button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+  background-color: var(--primary);
+  color: var(--primary-contrast);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.settings-actions button.secondary {
+  background-color: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.settings-actions button.secondary:hover {
+  background-color: var(--tab-hover-bg);
+}
+
+/* Tabs */
+.settings-tabs {
+  position: sticky;
+  top: 0; /* pinned inside main-content scroller */
+  z-index: 5;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(var(--bg), var(--bg));
+  padding: 8px 0 6px;
+}
+
+.tab-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  background-color: var(--tab-hover-bg);
+  color: var(--text);
+}
+
+.tab-button::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -2px;
+  height: 2px;
+  background-color: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+
+.tab-button.active {
+  color: var(--text);
+}
+
+.tab-button.active::after {
+  transform: scaleX(1);
+}
+
+.tab-icon {
+  font-size: 16px;
+}
+
+/* Message */
+.settings-message {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  border: 1px solid var(--success-border);
+}
+
+/* Grid */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: calc(var(--density) * 2);
+  align-items: start;
+}
+
+/* Cards sizing: 2-column layout on desktop, 1-column on mobile */
+.settings-card {
+  grid-column: span 6;
+}
+
+@media (max-width: 1024px) {
+  .settings-card {
+    grid-column: span 12;
+  }
+}
+
+/* Card */
+.settings-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--density) * 2);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  animation: fadeInUp 240ms ease both;
+}
+
+.settings-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.settings-card h3 {
+  margin: 0 0 14px 0;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 6px;
+}
+
+/* Form rows */
+.form-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.form-row.checkbox {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.form-row label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.form-row input[type="time"] {
+  padding-right: 6px;
+}
+
+.form-row input::placeholder,
+.form-row textarea::placeholder {
+  color: var(--muted);
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.form-row textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Read only */
+.read-only-field {
+  padding: 10px 12px;
+  background-color: color-mix(in srgb, var(--bg) 80%, #f8f9fa);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Hint */
+.hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Toggle switch for checkboxes in settings */
+.form-row.checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 44px;
+  height: 24px;
+  background-color: color-mix(in srgb, var(--text) 10%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  position: relative;
+  outline: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-row.checkbox input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+  transform: translate(0, -50%);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.form-row.checkbox input[type="checkbox"]:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.form-row.checkbox input[type="checkbox"]:checked::after {
+  transform: translate(20px, -50%);
+  background-color: var(--primary-contrast);
+}
+
+.form-row.checkbox input[type="checkbox"]:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .settings-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .settings-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

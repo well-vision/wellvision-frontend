@@ -3,8 +3,12 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 
+// i18n setup
+import './i18n/index';
+
 // Import AuthProvider to manage authentication state
-import { AuthProvider } from './context/AuthContext'; // ✅ Adjust if path differs
+import { AuthProvider } from './context/AuthContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 
 const App = lazy(() => import('./App'));
 
@@ -18,7 +22,7 @@ class ErrorBoundary extends Component {
     return { hasError: true };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("ErrorBoundary caught an error", error, errorInfo);
+    console.error('ErrorBoundary caught an error', error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
@@ -33,8 +37,11 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <Suspense fallback={<div>Loading...</div>}>
-        <AuthProvider> {/* ✅ Wrap App in AuthProvider */}
-          <App />
+        <AuthProvider>
+          <CurrencyProvider>
+            {/* Currency context wraps the app to enable formatting and conversion */}
+            <App />
+          </CurrencyProvider>
         </AuthProvider>
       </Suspense>
     </ErrorBoundary>
@@ -44,7 +51,6 @@ root.render(
 // Report web vitals with console logging
 function sendToAnalytics(metric) {
   console.log('Web Vitals:', metric);
-  // Optionally send this data to analytics backend
 }
 
 reportWebVitals(sendToAnalytics);

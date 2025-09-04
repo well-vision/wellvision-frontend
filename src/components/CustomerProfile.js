@@ -57,10 +57,12 @@ const CustomerProfile = () => {
   if (!customer) return <div className="error-message">Customer not found.</div>;
 
   const renderSection = (title, isOpen, toggleKey, children) => (
-    <section className="profile-card" aria-expanded={isOpen}>
+    <section className="profile-card">
       <div
         className="profile-card-header"
         role="button"
+        aria-expanded={isOpen}
+        aria-controls={`section-${toggleKey}`}
         tabIndex={0}
         onClick={() => toggleSection(toggleKey)}
         onKeyDown={(e) => e.key === 'Enter' && toggleSection(toggleKey)}
@@ -71,7 +73,7 @@ const CustomerProfile = () => {
         />
         <h3>{title}</h3>
       </div>
-      {isOpen && <div className="profile-card-body">{children}</div>}
+      {isOpen && <div id={`section-${toggleKey}`} className="profile-card-body">{children}</div>}
     </section>
   );
 

@@ -141,12 +141,21 @@ const WellVisionInvoice = () => {
       const response = await fetch('http://localhost:4000/api/invoices/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
       if (response.ok && data.success) {
-        toast.success('Invoice saved successfully!');
+        // Respect notification preference for invoice saved toast
+        try {
+          const prefsRes = await fetch('http://localhost:4000/api/user/settings', { credentials: 'include' });
+          const prefsData = await prefsRes.json();
+          const showToast = prefsData?.settings?.notifications?.invoiceSavedToast !== false;
+          if (showToast) toast.success('Invoice saved successfully!');
+        } catch {
+          toast.success('Invoice saved successfully!');
+        }
         setFormData({
           orderNo: '',
           date: new Date().toISOString().slice(0, 10),

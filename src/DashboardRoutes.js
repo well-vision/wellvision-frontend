@@ -7,6 +7,7 @@ import CustomerDashboard from './components/CustomerDashboard';
 import CustomerProfile from './components/CustomerProfile';
 import WellVisionInvoice from './components/WellVisionInvoice';
 import ProfilePage from './components/ProfilePage';
+import Settings from './components/Settings';
 
 export default function DashboardRoutes() {
   const location = useLocation();
@@ -17,6 +18,7 @@ export default function DashboardRoutes() {
     if (location.pathname.startsWith('/customer/')) return 'customers';
     if (location.pathname.startsWith('/invoice')) return 'invoice';
     if (location.pathname.startsWith('/profile')) return 'profile';
+    if (location.pathname.startsWith('/settings')) return 'settings';
     return 'home';
   };
 
@@ -30,6 +32,9 @@ export default function DashboardRoutes() {
         break;
       case 'profile':
         navigate('/profile');
+        break;
+      case 'settings':
+        navigate('/settings');
         break;
       case 'home':
       default:
@@ -45,6 +50,7 @@ export default function DashboardRoutes() {
         <Route path="/customer/:customerId" element={<PrivateRoute><CustomerProfile /></PrivateRoute>} />
         <Route path="/invoice" element={<PrivateRoute><WellVisionInvoice /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </DashboardLayout>

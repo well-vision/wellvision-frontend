@@ -2,8 +2,9 @@
 
 .dashboard-layout {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  height: 100vh; /* full viewport */
+  width: 100%;
+  overflow: hidden; /* prevent double scrollbars */
 }
 
 .sidebar {
@@ -20,9 +21,26 @@
 
 .main-content {
   margin-left: 240px; /* Same as sidebar width */
-  flex-grow: 1;
-  overflow-y: auto;
+  flex: 1 1 auto;
   height: 100vh;
-  padding: 20px;
-  background-color: #f4f4f4;
+  overflow: hidden; /* let inner pages control scroll */
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+}
+
+/* Page container scroller inside main-content */
+.main-content > * {
+  min-height: 0; /* fix flex overflow issue */
+}
+
+/* Settings and other pages should scroll internally */
+.main-content .settings-page {
+  overflow: auto;
+}
+
+/* Keep compatibility */
+.main-content.full-width {
+  margin-left: 0;
+  width: 100%;
 }

@@ -1,5 +1,6 @@
 // SalesDashboard.js
 import React, { useState, useMemo } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
 import './SalesDashboard.css';
 
 const filters = [
@@ -8,11 +9,7 @@ const filters = [
   { key: 'pending', label: 'Pending' },
 ];
 
-// Currency formatter for Sri Lankan Rupees
-const currencyFormatter = new Intl.NumberFormat('en-LK', {
-  style: 'currency',
-  currency: 'LKR',
-});
+// Currency formatting through global currency context
 
 export default function SalesDashboard({ onNavigate }) {
   const [salesData] = useState([
@@ -44,10 +41,12 @@ export default function SalesDashboard({ onNavigate }) {
   const completedSales = useMemo(() => filteredSales.filter(sale => sale.status === 'Completed'), [filteredSales]);
   const pendingSales = useMemo(() => filteredSales.filter(sale => sale.status === 'Pending'), [filteredSales]);
 
+  const { format } = useCurrency();
+
   const salesAmount = useMemo(() => completedSales.reduce((sum, sale) => sum + sale.amount, 0), [completedSales]);
   const salesAccount = useMemo(() => pendingSales.reduce((sum, sale) => sum + sale.amount, 0), [pendingSales]);
 
-  const formatCurrency = amount => currencyFormatter.format(amount);
+  const formatCurrency = amount => format(amount);
 
   const getItemIcon = category => {
     switch(category) {

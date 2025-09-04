@@ -25,7 +25,7 @@ export default function CustomerDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [showProfile, setShowProfile] = useState(false);
+  // const [showProfile, setShowProfile] = useState(false); // unused
   const [mode, setMode] = useState('create'); // create | edit | view
 
   const [formData, setFormData] = useState({
@@ -43,22 +43,22 @@ export default function CustomerDashboard() {
 
   const navigate = useNavigate();
 
-  const handleCustomerClick = async (id) => {
-    try {
-      const res = await fetch(`http://localhost:4000/api/customers/${id}`);
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        setSelectedCustomer(data.customer);
-        setShowProfile(true);
-      } else {
-        toast.error(data.message || "Failed to load customer profile");
-      }
-    } catch (error) {
-      console.error("Error fetching customer:", error);
-      toast.error("Server error");
-    }
-  };
+  // const handleCustomerClick = async (id) => {
+  //   try {
+  //     const res = await fetch(`http://localhost:4000/api/customers/${id}`);
+  //     const data = await res.json();
+  //
+  //     if (res.ok && data.success) {
+  //       setSelectedCustomer(data.customer);
+  //       setShowProfile(true);
+  //     } else {
+  //       toast.error(data.message || "Failed to load customer profile");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching customer:", error);
+  //     toast.error("Server error");
+  //   }
+  // };
 
   // Validation function (basic + regex hints for NIC, email, phone)
   const validateForm = () => {

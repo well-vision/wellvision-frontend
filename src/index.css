@@ -3,12 +3,52 @@
   box-sizing: border-box;
 }
 
-/* Optional: set a comfortable base font size and line height */
+/* Theme + appearance tokens on :root; switched by body classes */
+:root {
+  --bg: #ffffff;
+  --text: #222222;
+  --surface: #f5f5f7;
+  --border: #e3e3e3;
+  --accent: #0069d9;
+
+  --font-size: 16px; /* default medium */
+  --density: 10px; /* default spacing unit */
+}
+
+/* Dark theme overrides */
+body.theme-dark {
+  --bg: #121212;
+  --text: #eaeaea;
+  --surface: #1e1e1e;
+  --border: #2a2a2a;
+  --accent: #61dafb;
+}
+
+/* Light theme can be explicit as well */
+body.theme-light {
+  --bg: #ffffff;
+  --text: #222222;
+  --surface: #f5f5f7;
+  --border: #e3e3e3;
+  --accent: #0069d9;
+}
+
+/* Font size presets */
+body.font-small { --font-size: 14px; }
+body.font-medium { --font-size: 16px; }
+body.font-large { --font-size: 18px; }
+
+/* Density presets (controls paddings/gaps) */
+body.density-comfortable { --density: 12px; }
+body.density-compact { --density: 8px; }
+body.density-cosy { --density: 10px; }
+
+/* Apply tokens globally */
 body {
-  font-size: 16px;
+  font-size: var(--font-size);
   line-height: 1.5;
-  background-color: #fff; /* or your app’s background */
-  color: #222; /* sensible default text color */
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 /* Make sure images and media are responsive */
