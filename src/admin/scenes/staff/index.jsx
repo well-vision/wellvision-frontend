@@ -23,6 +23,8 @@ import {
   Chip,
   Alert,
   Snackbar,
+  Grid,
+  InputAdornment,
 } from "@mui/material";
 import {
   Add,
@@ -32,6 +34,12 @@ import {
   ExpandMore,
   Search,
   FilterList,
+  Person,
+  Email,
+  Lock,
+  Phone,
+  Business,
+  Close,
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import Header from "../../components/Header";
@@ -415,83 +423,135 @@ const Staff = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>
+        <DialogTitle sx={{ backgroundColor: theme.palette.background.alt, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {openAddModal ? "Add New Staff Member" : "Edit Staff Member"}
+          <IconButton onClick={handleCloseModal} aria-label="close" size="small">
+            <Close />
+          </IconButton>
         </DialogTitle>
         <form onSubmit={handleSubmit}>
-          <DialogContent>
-            <Box display="flex" flexDirection="column" gap="1rem">
-              <TextField
-                name="name"
-                label="Full Name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                fullWidth
-              />
-              <TextField
-                name="email"
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                fullWidth
-              />
-              {/* Password is not required on create; default is assigned by backend */}
-              {openEditModal && (
+          <DialogContent sx={{ pt: 3 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
                 <TextField
-                  name="password"
-                  label="New Password (leave blank to keep current)"
-                  type="password"
-                  value={formData.password}
+                  name="name"
+                  label="Full Name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  size="small"
+                  InputProps={{ startAdornment: (
+                    <InputAdornment position="start">
+                      <Person />
+                    </InputAdornment>
+                  )}}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="email"
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  fullWidth
+                  size="small"
+                  InputProps={{ startAdornment: (
+                    <InputAdornment position="start">
+                      <Email />
+                    </InputAdornment>
+                  )}}
+                />
+              </Grid>
+
+              {openEditModal && (
+                <Grid item xs={12}>
+                  <TextField
+                    name="password"
+                    label="New Password (leave blank to keep current)"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    fullWidth
+                    size="small"
+                    autoComplete="new-password"
+                    InputProps={{ startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock />
+                      </InputAdornment>
+                    )}}
+                  />
+                </Grid>
+              )}
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Role</InputLabel>
+                  <Select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    label="Role"
+                  >
+                    <MenuItem value="Admin">Admin</MenuItem>
+                    <MenuItem value="Manager">Manager</MenuItem>
+                    <MenuItem value="Supervisor">Supervisor</MenuItem>
+                    <MenuItem value="Employee">Employee</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    label="Status"
+                  >
+                    <MenuItem value="Active">Active</MenuItem>
+                    <MenuItem value="Inactive">Inactive</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="phoneNumber"
+                  label="Phone Number"
+                  value={formData.phoneNumber}
                   onChange={handleInputChange}
                   fullWidth
+                  size="small"
+                  InputProps={{ startAdornment: (
+                    <InputAdornment position="start">
+                      <Phone />
+                    </InputAdornment>
+                  )}}
                 />
-              )}
-              <FormControl fullWidth>
-                <InputLabel>Role</InputLabel>
-                <Select
-                  name="role"
-                  value={formData.role}
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="department"
+                  label="Department"
+                  value={formData.department}
                   onChange={handleInputChange}
-                  label="Role"
-                >
-                  <MenuItem value="Admin">Admin</MenuItem>
-                  <MenuItem value="Manager">Manager</MenuItem>
-                  <MenuItem value="Supervisor">Supervisor</MenuItem>
-                  <MenuItem value="Employee">Employee</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  label="Status"
-                >
-                  <MenuItem value="Active">Active</MenuItem>
-                  <MenuItem value="Inactive">Inactive</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                name="phoneNumber"
-                label="Phone Number"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                fullWidth
-              />
-              <TextField
-                name="department"
-                label="Department"
-                value={formData.department}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Box>
+                  fullWidth
+                  size="small"
+                  InputProps={{ startAdornment: (
+                    <InputAdornment position="start">
+                      <Business />
+                    </InputAdornment>
+                  )}}
+                />
+              </Grid>
+            </Grid>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, display: 'flex', justifyContent: 'space-between' }}>
             <Button onClick={handleCloseModal}>Cancel</Button>
             <Button type="submit" variant="contained">
               {openAddModal ? "Add Staff" : "Update Staff"}
