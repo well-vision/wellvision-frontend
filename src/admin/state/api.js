@@ -1,28 +1,42 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { mockDashboardData, mockSalesData, mockUserData, mockProductsData, mockTransactionsData, mockCustomersData, mockGeographyData, mockPerformanceData, mockAdminsData } from "../data/mockData";
+import { mockDashboardData, mockSalesData, mockUserData, mockProductsData, mockTransactionsData, mockCustomersData, mockGeographyData, mockPerformanceData, mockAdminsData, mockStaffData } from "../data/mockData";
 
 // Custom base query that falls back to mock data
 const baseQueryWithFallback = async (args, api, extraOptions) => {
   const baseQuery = fetchBaseQuery({
     baseUrl: process.env.REACT_APP_BASE_URL || "http://localhost:4000/api/admin",
     prepareHeaders: (headers) => {
-      headers.set('Content-Type', 'application/json');
+      headers.set("Content-Type", "application/json");
       return headers;
     },
   });
 
+  // Determine HTTP method; default to GET
+  const method =
+    typeof args === "string"
+      ? "GET"
+      : (args.method || "GET").toUpperCase();
+
   try {
     const result = await baseQuery(args, api, extraOptions);
-    
-    // If API call fails, return mock data
+
     if (result.error) {
-      console.warn(`API call failed for ${args}, using mock data`);
+      // Do not fallback for write operations; surface the error to the UI
+      if (method !== "GET") return result;
+
+      console.warn(
+        `API ${method} ${typeof args === "string" ? args : args.url} failed, using mock data`
+      );
       return getMockData(args);
     }
-    
+
     return result;
   } catch (error) {
-    console.warn(`API call failed for ${args}, using mock data:`, error);
+    if (method !== "GET") throw error;
+    console.warn(
+      `API ${method} ${typeof args === "string" ? args : args.url} failed, using mock data:`,
+      error
+    );
     return getMockData(args);
   }
 };
@@ -47,6 +61,9 @@ const getMockData = (args) => {
     return { data: mockPerformanceData };
   } else if (endpoint === 'management/admins') {
     return { data: mockAdminsData };
+  } else if (endpoint === 'staff') {
+    // Match backend response shape for staff list
+    return { data: { staff: mockStaffData.staff, total: mockStaffData.total } };
   } else if (endpoint && endpoint.startsWith('general/user/')) {
     return { data: mockUserData };
   } else {
@@ -65,6 +82,7 @@ export const api = createApi({
     "Geography",
     "Sales",
     "Admins",
+    "Staff",
     "Performance",
     "Dashboard",
   ],
@@ -101,6 +119,45 @@ export const api = createApi({
       query: () => "management/admins",
       providesTags: ["Admins"],
     }),
+    getStaff: build.query({
+      query: ({ page, pageSize, sort, search }) => ({
+        url: "staff",
+        method: "GET",
+        params: { page, pageSize, sort, search },
+      }),
+      providesTags: ["Staff"],
+    }),
+    getStaffById: build.query({
+      query: (id) => `staff/${id}`,
+      providesTags: ["Staff"],
+    }),
+    createStaff: build.mutation({
+      query: (staffData) => ({
+        url: "staff",
+        method: "POST",
+        body: staffData,
+      }),
+      invalidatesTags: ["Staff"],
+    }),
+    updateStaff: build.mutation({
+      query: ({ id, ...staffData }) => ({
+        url: `staff/${id}`,
+        method: "PUT",
+        body: staffData,
+      }),
+      invalidatesTags: ["Staff"],
+    }),
+    deleteStaff: build.mutation({
+      query: (id) => ({
+        url: `staff/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Staff"],
+    }),
+    getStaffStats: build.query({
+      query: () => "staff/stats",
+      providesTags: ["Staff"],
+    }),
     getUserPerformance: build.query({
       query: (id) => `management/performance/${id}`,
       providesTags: ["Performance"],
@@ -120,6 +177,12 @@ export const {
   useGetGeographyQuery,
   useGetSalesQuery,
   useGetAdminsQuery,
+  useGetStaffQuery,
+  useGetStaffByIdQuery,
+  useCreateStaffMutation,
+  useUpdateStaffMutation,
+  useDeleteStaffMutation,
+  useGetStaffStatsQuery,
   useGetUserPerformanceQuery,
   useGetDashboardQuery,
 } = api;

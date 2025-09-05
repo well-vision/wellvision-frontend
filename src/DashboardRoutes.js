@@ -22,6 +22,7 @@ import Daily from './admin/scenes/daily';
 import Monthly from './admin/scenes/monthly';
 import Breakdown from './admin/scenes/breakdown';
 import Admin from './admin/scenes/admin';
+import Staff from './admin/scenes/staff';
 import Performance from './admin/scenes/performance';
 
 export default function DashboardRoutes() {
@@ -48,6 +49,7 @@ export default function DashboardRoutes() {
           <Route path="monthly" element={<Monthly />} />
           <Route path="breakdown" element={<Breakdown />} />
           <Route path="admin" element={<Admin />} />
+          <Route path="staff" element={<Staff />} />
           <Route path="performance" element={<Performance />} />
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Route>

@@ -289,3 +289,74 @@ export const mockAdminsData = [
     role: "admin"
   }
 ];
+
+export const mockStaffData = {
+  staff: [
+    {
+      _id: "63701cc1f03239b7f700006a",
+      staffId: "STF0001",
+      name: "Alice Johnson",
+      email: "alice.johnson@wellvision.com",
+      role: "Manager",
+      status: "Active",
+      phoneNumber: "5551234567",
+      department: "Operations",
+      hireDate: "2023-01-15T00:00:00Z",
+      createdAt: "2023-01-15T10:30:00Z",
+      updatedAt: "2024-01-15T10:30:00Z"
+    },
+    {
+      _id: "63701cc1f03239b7f700006b",
+      staffId: "STF0002",
+      name: "Bob Smith",
+      email: "bob.smith@wellvision.com",
+      role: "Employee",
+      status: "Active",
+      phoneNumber: "5559876543",
+      department: "Sales",
+      hireDate: "2023-03-20T00:00:00Z",
+      createdAt: "2023-03-20T14:20:00Z",
+      updatedAt: "2024-01-10T14:20:00Z"
+    },
+    {
+      _id: "63701cc1f03239b7f700006c",
+      staffId: "STF0003",
+      name: "Carol Davis",
+      email: "carol.davis@wellvision.com",
+      role: "Supervisor",
+      status: "Active",
+      phoneNumber: "5555551234",
+      department: "Customer Service",
+      hireDate: "2023-05-10T00:00:00Z",
+      createdAt: "2023-05-10T09:15:00Z",
+      updatedAt: "2024-01-05T09:15:00Z"
+    },
+    {
+      _id: "63701cc1f03239b7f700006d",
+      staffId: "STF0004",
+      name: "David Wilson",
+      email: "david.wilson@wellvision.com",
+      role: "Employee",
+      status: "Inactive",
+      phoneNumber: "5557778888",
+      department: "IT Support",
+      hireDate: "2023-07-01T00:00:00Z",
+      createdAt: "2023-07-01T11:45:00Z",
+      updatedAt: "2023-12-15T11:45:00Z"
+    },
+    {
+      _id: "63701cc1f03239b7f700006e",
+      staffId: "STF0005",
+      name: "Emma Brown",
+      email: "emma.brown@wellvision.com",
+      role: "Admin",
+      status: "Active",
+      phoneNumber: "5553334444",
+      department: "Administration",
+      hireDate: "2023-02-28T00:00:00Z",
+      createdAt: "2023-02-28T16:00:00Z",
+      updatedAt: "2024-01-20T16:00:00Z"
+    }
+  ],
+  total: 5
+};

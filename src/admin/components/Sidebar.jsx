@@ -25,6 +25,7 @@ import {
   AdminPanelSettingsOutlined,
   TrendingUpOutlined,
   PieChartOutlined,
+  PeopleOutlined,
 } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -81,6 +82,10 @@ const navItems = [
   {
     text: "Admin",
     icon: <AdminPanelSettingsOutlined />,
+  },
+  {
+    text: "Staff",
+    icon: <PeopleOutlined />,
   },
   {
     text: "Performance",
