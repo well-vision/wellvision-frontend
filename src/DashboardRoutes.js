@@ -35,8 +35,8 @@ export default function DashboardRoutes() {
     return <Navigate to="/login" replace />;
   }
 
-  // If admin, render admin routes
-  if (user.role === 'admin') {
+  // If admin, render admin routes (case-insensitive check)
+  if (user.role && user.role.toLowerCase() === 'admin') {
     return (
       <Routes>
         <Route path="/admin/*" element={<AdminLayout />}>

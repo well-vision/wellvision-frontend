@@ -9,7 +9,7 @@ const Monthly = () => {
   const theme = useTheme();
 
   const [formattedData] = useMemo(() => {
-    if (!data || !data.monthlyData) return [];
+    if (!data || !data.monthlyData || typeof data.monthlyData !== 'object') return [];
 
     const { monthlyData } = data;
     const totalSalesLine = {
@@ -24,7 +24,10 @@ const Monthly = () => {
     };
 
     try {
-      Object.values(monthlyData).forEach(({ month, totalSales, totalUnits }) => {
+      Object.values(monthlyData).forEach((item) => {
+        if (!item || typeof item !== 'object' || !item.month) return;
+
+        const { month, totalSales, totalUnits } = item;
         totalSalesLine.data = [
           ...totalSalesLine.data,
           { x: month, y: totalSales || 0 },

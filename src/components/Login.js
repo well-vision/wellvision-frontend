@@ -27,8 +27,8 @@ function Login() {
       if (res.ok && data.success && data.user) {
         loginUser(data.user); // store user in context
 
-        // ✅ Redirect based on role
-        if (data.user.role === 'admin') {
+        // ✅ Redirect based on role (case-insensitive check)
+        if (data.user.role && data.user.role.toLowerCase() === 'admin') {
           navigate('/admin/dashboard'); // admin dashboard
         } else {
           navigate('/dashboard'); // normal dashboard

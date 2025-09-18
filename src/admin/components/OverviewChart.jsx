@@ -8,7 +8,7 @@ const OverviewChart = ({ isDashboard = false, view }) => {
   const { data, isLoading } = useGetSalesQuery();
 
   const [totalSalesLine, totalUnitsLine] = useMemo(() => {
-    if (!data || !data.monthlyData) return [[], []];
+    if (!data || !data.monthlyData || typeof data.monthlyData !== 'object') return [[], []];
 
     const { monthlyData } = data;
     const totalSalesLine = {
@@ -24,7 +24,10 @@ const OverviewChart = ({ isDashboard = false, view }) => {
 
     try {
       Object.values(monthlyData).reduce(
-        (acc, { month, totalSales, totalUnits }) => {
+        (acc, item) => {
+          if (!item || typeof item !== 'object' || !item.month) return acc;
+
+          const { month, totalSales, totalUnits } = item;
           const curSales = acc.sales + (totalSales || 0);
           const curUnits = acc.units + (totalUnits || 0);
 

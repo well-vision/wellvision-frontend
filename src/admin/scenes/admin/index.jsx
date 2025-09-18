@@ -77,7 +77,10 @@ const Admin = () => {
     );
   }
 
-  if (!data || !Array.isArray(data) || data.length === 0) {
+  // Defensive check for data
+  const safeData = Array.isArray(data) ? data : [];
+
+  if (safeData.length === 0) {
     return (
       <Box m="1.5rem 2.5rem">
         <Header title="ADMINS" subtitle="Managing admins and list of admins" />
@@ -122,11 +125,12 @@ const Admin = () => {
         <DataGrid
           loading={false}
           getRowId={(row) => row._id}
-          rows={data}
+          rows={safeData}
           columns={columns}
-          components={{
-            ColumnMenu: CustomColumnMenu,
-          }}
+          // Temporarily remove custom column menu to avoid runtime error
+          // components={{
+          //   ColumnMenu: CustomColumnMenu,
+          // }}
         />
       </Box>
     </Box>

@@ -46,6 +46,10 @@ const Dashboard = () => {
     );
   }
 
+  // Defensive check for data and transactions
+  const safeData = data || {};
+  const safeTransactions = Array.isArray(safeData.transactions) ? safeData.transactions : [];
+
   const columns = [
     {
       field: "_id",
@@ -196,7 +200,7 @@ const Dashboard = () => {
           <DataGrid
             loading={isLoading || !data}
             getRowId={(row) => row._id}
-            rows={(data && data.transactions) || []}
+            rows={safeTransactions}
             columns={columns}
           />
         </Box>
