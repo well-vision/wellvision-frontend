@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Box, useTheme } from "@mui/material";
+import { Box, useTheme, Button } from "@mui/material";
 import Header from "../../components/Header";
 import { ResponsiveLine } from "@nivo/line";
 import { useGetSalesQuery } from "../../state/api";
@@ -9,11 +9,63 @@ import "react-datepicker/dist/react-datepicker.css";
 const Daily = () => {
   const [startDate, setStartDate] = useState(new Date("2021-02-01"));
   const [endDate, setEndDate] = useState(new Date("2021-03-01"));
+  const [view, setView] = useState("sales");
   const { data } = useGetSalesQuery();
   const theme = useTheme();
 
   const formattedData = useMemo(() => {
-    if (!data || !data.dailyData || typeof data.dailyData !== 'object') return [];
+    if (!data || !data.dailyData || typeof data.dailyData !== 'object') {
+      // Provide sample data for testing up to September 18, 2024
+      const sampleSalesLine = {
+        id: "totalSales",
+        color: theme.palette.secondary.main,
+        data: [
+          { x: "09-01", y: 120 },
+          { x: "09-02", y: 150 },
+          { x: "09-03", y: 180 },
+          { x: "09-04", y: 200 },
+          { x: "09-05", y: 220 },
+          { x: "09-06", y: 190 },
+          { x: "09-07", y: 210 },
+          { x: "09-08", y: 230 },
+          { x: "09-09", y: 250 },
+          { x: "09-10", y: 270 },
+          { x: "09-11", y: 240 },
+          { x: "09-12", y: 260 },
+          { x: "09-13", y: 280 },
+          { x: "09-14", y: 300 },
+          { x: "09-15", y: 320 },
+          { x: "09-16", y: 290 },
+          { x: "09-17", y: 310 },
+          { x: "09-18", y: 330 },
+        ],
+      };
+      const sampleUnitsLine = {
+        id: "totalUnits",
+        color: theme.palette.secondary[600],
+        data: [
+          { x: "09-01", y: 60 },
+          { x: "09-02", y: 75 },
+          { x: "09-03", y: 90 },
+          { x: "09-04", y: 100 },
+          { x: "09-05", y: 110 },
+          { x: "09-06", y: 95 },
+          { x: "09-07", y: 105 },
+          { x: "09-08", y: 115 },
+          { x: "09-09", y: 125 },
+          { x: "09-10", y: 135 },
+          { x: "09-11", y: 120 },
+          { x: "09-12", y: 130 },
+          { x: "09-13", y: 140 },
+          { x: "09-14", y: 150 },
+          { x: "09-15", y: 160 },
+          { x: "09-16", y: 145 },
+          { x: "09-17", y: 155 },
+          { x: "09-18", y: 165 },
+        ],
+      };
+      return view === "sales" ? [sampleSalesLine] : [sampleUnitsLine];
+    }
 
     const { dailyData } = data;
     const totalSalesLine = {
@@ -51,33 +103,49 @@ const Daily = () => {
       return [];
     }
 
-    const formattedData = [totalSalesLine, totalUnitsLine];
+    const formattedData = view === "sales" ? [totalSalesLine] : [totalUnitsLine];
     return formattedData;
-  }, [data, startDate, endDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, startDate, endDate, view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Box m="1.5rem 2.5rem">
       <Header title="DAILY SALES" subtitle="Chart of daily sales" />
       <Box height="75vh">
-        <Box display="flex" justifyContent="flex-end">
-          <Box>
-            <DatePicker
-              selected={startDate}
-              onChange={(date) => setStartDate(date)}
-              selectsStart
-              startDate={startDate}
-              endDate={endDate}
-            />
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box display="flex" gap="1rem">
+            <Button
+              variant={view === "sales" ? "contained" : "outlined"}
+              onClick={() => setView("sales")}
+            >
+              Sales
+            </Button>
+            <Button
+              variant={view === "units" ? "contained" : "outlined"}
+              onClick={() => setView("units")}
+            >
+              Units
+            </Button>
           </Box>
-          <Box>
-            <DatePicker
-              selected={endDate}
-              onChange={(date) => setEndDate(date)}
-              selectsEnd
-              startDate={startDate}
-              endDate={endDate}
-              minDate={startDate}
-            />
+          <Box display="flex" gap="1rem">
+            <Box>
+              <DatePicker
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                selectsStart
+                startDate={startDate}
+                endDate={endDate}
+              />
+            </Box>
+            <Box>
+              <DatePicker
+                selected={endDate}
+                onChange={(date) => setEndDate(date)}
+                selectsEnd
+                startDate={startDate}
+                endDate={endDate}
+                minDate={startDate}
+              />
+            </Box>
           </Box>
         </Box>
 
@@ -118,7 +186,7 @@ const Daily = () => {
               },
             }}
             colors={{ datum: "color" }}
-            margin={{ top: 50, right: 50, bottom: 70, left: 60 }}
+            margin={{ top: 20, right: 50, bottom: 50, left: 70 }}
             xScale={{ type: "point" }}
             yScale={{
               type: "linear",
@@ -129,24 +197,26 @@ const Daily = () => {
             }}
             yFormat=" >-.2f"
             curve="catmullRom"
+            enableArea={false}
             axisTop={null}
             axisRight={null}
             axisBottom={{
               orient: "bottom",
               tickSize: 5,
               tickPadding: 5,
-              tickRotation: 90,
-              legend: "Month",
-              legendOffset: 60,
+              tickRotation: 0,
+              legend: "Date",
+              legendOffset: 36,
               legendPosition: "middle",
             }}
             axisLeft={{
               orient: "left",
+              tickValues: 5,
               tickSize: 5,
               tickPadding: 5,
               tickRotation: 0,
-              legend: "Total",
-              legendOffset: -50,
+              legend: `Total ${view === "sales" ? "Revenue" : "Units"} for Year`,
+              legendOffset: -60,
               legendPosition: "middle",
             }}
             enableGridX={false}
@@ -159,11 +229,11 @@ const Daily = () => {
             useMesh={true}
             legends={[
               {
-                anchor: "top-right",
+                anchor: "bottom-right",
                 direction: "column",
                 justify: false,
-                translateX: 50,
-                translateY: 0,
+                translateX: 30,
+                translateY: -40,
                 itemsSpacing: 0,
                 itemDirection: "left-to-right",
                 itemWidth: 80,
