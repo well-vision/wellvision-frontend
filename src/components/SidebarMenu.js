@@ -9,7 +9,8 @@ import {
   CreditCard,
   Settings,
   User,
-  LogOut
+  LogOut,
+  Logs
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +27,8 @@ export default function SidebarMenu({ active = 'home' }) {
     { label: 'Customers', icon: <Users />, key: 'customers' },
     { label: 'Product', icon: <Package />, key: 'products' },
     { label: 'Invoice', icon: <FileText />, key: 'invoice' },
-    { label: 'Bills', icon: <CreditCard />, key: 'bills' }
+    { label: 'Bills', icon: <CreditCard />, key: 'bills' },
+    { label: 'Order', icon: <Logs />, key: 'orders' }
   ];
 
   const generalItems = [
