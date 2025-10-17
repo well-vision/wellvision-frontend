@@ -10,6 +10,7 @@ import CustomerDashboard from './components/CustomerDashboard';
 import CustomerProfile from './components/CustomerProfile';
 import WellVisionInvoice from './components/WellVisionInvoice';
 import ProfilePage from './components/ProfilePage';
+//import Orders from './components/OrderDashboard';
 
 // Admin components
 import AdminLayout from './admin/scenes/layout';
@@ -52,6 +53,7 @@ export default function DashboardRoutes() {
           <Route path="admin" element={<Admin />} />
           <Route path="staff" element={<Staff />} />
           <Route path="performance" element={<Performance />} />
+          
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
       </Routes>

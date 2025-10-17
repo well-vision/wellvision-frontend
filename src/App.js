@@ -8,6 +8,7 @@ import ResetPassword from './components/ResetPassword';
 import SendVerifyOtp from './components/SendVerifyOtp';
 import VerifyOtp from './components/VerifyEmail';
 
+import Order from './components/OrderDashboard'; // New import
 import DashboardRoutes from './DashboardRoutes'; // ✅ use the correct one
 
 export default function App() {
@@ -23,6 +24,8 @@ export default function App() {
         <Route path="/send-verify-otp" element={<SendVerifyOtp />} />
         <Route path="/verify-email" element={<VerifyOtp />} />
 
+        {/*staff only route */}
+        <Route path="/orders" element={<Order />} />
         {/* Protected Dashboard Routes */}
         <Route path="/*" element={<DashboardRoutes />} />
       </Routes>
