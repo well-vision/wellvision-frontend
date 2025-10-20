@@ -3,7 +3,11 @@ import './WellVisionInvoice.css';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+<<<<<<< HEAD
 const WellVisionInvoice = () => {
+=======
+const WellVisionInvoice = ({ customer }) => {
+>>>>>>> da5e7a0 (Initial Commit)
   const [formData, setFormData] = useState({
     orderNo: '',
     date: new Date().toISOString().slice(0, 10),
@@ -20,6 +24,21 @@ const WellVisionInvoice = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+<<<<<<< HEAD
+=======
+  // Export customer data to pre-fill the form
+  useEffect(() => {
+    if (customer) {
+      setFormData(prev => ({
+        ...prev,
+        name: `${customer.givenName || ''} ${customer.familyName || ''}`.trim(),
+        tel: customer.phoneNo || '',
+        address: customer.address || ''
+      }));
+    }
+  }, [customer]);
+
+>>>>>>> da5e7a0 (Initial Commit)
   // Fetch next Bill No from backend
   useEffect(() => {
     const fetchBillNo = async () => {
@@ -151,9 +170,15 @@ const WellVisionInvoice = () => {
           orderNo: '',
           date: new Date().toISOString().slice(0, 10),
           billNo: '', // New billNo will be fetched
+<<<<<<< HEAD
           name: '',
           tel: '',
           address: '',
+=======
+          name: customer ? `${customer.givenName || ''} ${customer.familyName || ''}`.trim() : '',
+          tel: customer ? customer.phoneNo || '' : '',
+          address: customer ? customer.address || '' : '',
+>>>>>>> da5e7a0 (Initial Commit)
           items: Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
           amount: '',
           advance: '',
@@ -390,4 +415,8 @@ const WellVisionInvoice = () => {
   );
 };
 
+<<<<<<< HEAD
 export default WellVisionInvoice;
+=======
+export default WellVisionInvoice;
+>>>>>>> da5e7a0 (Initial Commit)

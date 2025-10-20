@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* CustomerProfile.css with unique prefixes - EXPANDED WIDTH */
 
 .profile-page {
@@ -10,17 +11,160 @@
 }
 
 /* Header */
+=======
+/* Additional Information Section */
+.additional-info-section {
+  padding: 20px;
+}
+
+.submit-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.submit-section strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+.submit-section p {
+  margin-bottom: 15px;
+  color: #666;
+}
+
+.checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.4;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+/* Prescription Section */
+.prescription-section {
+  padding: 20px;
+}
+
+/* Profile Section Cards */
+.profile-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.profile-card-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.profile-card-header:hover {
+  background: #e9ecef;
+}
+
+.profile-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.profile-chevron-icon {
+  transition: transform 0.2s;
+  margin-right: 12px;
+  color: #666;
+}
+
+.profile-chevron-icon.expanded {
+  transform: rotate(90deg);
+}
+
+.profile-card-body {
+  padding: 0;
+}
+
+/* Loading and Error States */
+.loading-message,
+.error-message {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+}
+
+.error-message {
+  color: #dc3545;
+}
+
+/* Profile Header */
+>>>>>>> da5e7a0 (Initial Commit)
 .profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+<<<<<<< HEAD
   margin-bottom: 30px;
   padding: 0 5px;
+=======
+  padding: 20px;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 20px;
+}
+
+.profile-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-back-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.profile-back-btn:hover {
+  background: #f8f9fa;
+>>>>>>> da5e7a0 (Initial Commit)
 }
 
 .profile-header-left h2 {
   margin: 0;
+<<<<<<< HEAD
   font-size: 24px;
+=======
+  font-size: 20px;
+>>>>>>> da5e7a0 (Initial Commit)
   font-weight: 600;
   color: #333;
   display: flex;
@@ -37,6 +181,7 @@
 .profile-icon-btn {
   background: none;
   border: none;
+<<<<<<< HEAD
   padding: 8px;
   cursor: pointer;
   border-radius: 6px;
@@ -67,6 +212,35 @@
 
 .profile-add-new-btn {
   background-color: #007bff;
+=======
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.profile-icon-btn:hover {
+  background: #f8f9fa;
+}
+
+.profile-notification-badge {
+  background: #dc3545;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 12px;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+}
+
+.profile-add-new-btn {
+  background: #007bff;
+>>>>>>> da5e7a0 (Initial Commit)
   color: white;
   border: none;
   padding: 8px 16px;
@@ -81,22 +255,38 @@
 }
 
 .profile-add-new-btn:hover {
+<<<<<<< HEAD
   background-color: #0056b3;
 }
 
 /* Customer Info */
+=======
+  background: #0056b3;
+}
+
+/* Customer Info Section */
+>>>>>>> da5e7a0 (Initial Commit)
 .profile-customer-info {
   display: flex;
   align-items: center;
   gap: 16px;
+<<<<<<< HEAD
   margin-bottom: 30px;
   padding: 0 5px;
+=======
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+>>>>>>> da5e7a0 (Initial Commit)
 }
 
 .profile-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
+<<<<<<< HEAD
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
@@ -105,11 +295,24 @@
   font-weight: bold;
   color: white;
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+=======
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+>>>>>>> da5e7a0 (Initial Commit)
 }
 
 .profile-customer-text h1 {
   margin: 0 0 4px 0;
+<<<<<<< HEAD
   font-size: 28px;
+=======
+  font-size: 24px;
+>>>>>>> da5e7a0 (Initial Commit)
   font-weight: 600;
   color: #333;
 }
@@ -120,6 +323,7 @@
   color: #666;
 }
 
+<<<<<<< HEAD
 /* Card Styles */
 .profile-card {
   background: white;
@@ -163,18 +367,28 @@
   padding: 0;
 }
 
+=======
+>>>>>>> da5e7a0 (Initial Commit)
 /* Tabs */
 .profile-tabs {
   display: flex;
   border-bottom: 1px solid #e9ecef;
+<<<<<<< HEAD
   background-color: #f8f9fa;
   padding: 0 24px;
+=======
+  margin-bottom: 20px;
+>>>>>>> da5e7a0 (Initial Commit)
 }
 
 .profile-tab-btn {
   background: none;
   border: none;
+<<<<<<< HEAD
   padding: 14px 20px;
+=======
+  padding: 12px 24px;
+>>>>>>> da5e7a0 (Initial Commit)
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -185,12 +399,17 @@
 
 .profile-tab-btn:hover {
   color: #333;
+<<<<<<< HEAD
   background-color: #e9ecef;
+=======
+  background: #f8f9fa;
+>>>>>>> da5e7a0 (Initial Commit)
 }
 
 .profile-tab-btn.active {
   color: #007bff;
   border-bottom-color: #007bff;
+<<<<<<< HEAD
   background-color: white;
 }
 
@@ -409,3 +628,53 @@
   border-radius: 4px;
   box-sizing: border-box;
 }
+=======
+}
+
+/* Details Table */
+.profile-details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.profile-details-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: top;
+}
+
+.profile-details-table td strong {
+  color: #333;
+}
+
+.profile-details-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Prescription Table */
+.profile-prescription-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.profile-prescription-table th,
+.profile-prescription-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.profile-prescription-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.profile-prescription-table tr:last-child td {
+  border-bottom: none;
+}
+>>>>>>> da5e7a0 (Initial Commit)
