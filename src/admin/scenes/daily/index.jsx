@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Box, useTheme, Button } from "@mui/material";
+import { Box, useTheme, Button, Typography } from "@mui/material";
 import Header from "../../components/Header";
 import { ResponsiveLine } from "@nivo/line";
 import { useGetSalesQuery } from "../../state/api";
@@ -10,12 +10,12 @@ const Daily = () => {
   const [startDate, setStartDate] = useState(new Date("2021-02-01"));
   const [endDate, setEndDate] = useState(new Date("2021-03-01"));
   const [view, setView] = useState("sales");
-  const { data } = useGetSalesQuery();
+  const { data, isLoading, isError } = useGetSalesQuery();
   const theme = useTheme();
 
   const formattedData = useMemo(() => {
+    // Build safe sample fallback when no data
     if (!data || !data.dailyData || typeof data.dailyData !== 'object') {
-      // Provide sample data for testing up to September 18, 2024
       const sampleSalesLine = {
         id: "totalSales",
         color: theme.palette.secondary.main,
@@ -85,17 +85,13 @@ const Daily = () => {
 
         const { date, totalSales, totalUnits } = item;
         const dateFormatted = new Date(date);
+        if (isNaN(dateFormatted)) return;
         if (dateFormatted >= startDate && dateFormatted <= endDate) {
           const splitDate = date.substring(date.indexOf("-") + 1);
-
-          totalSalesLine.data = [
-            ...totalSalesLine.data,
-            { x: splitDate, y: totalSales || 0 },
-          ];
-          totalUnitsLine.data = [
-            ...totalUnitsLine.data,
-            { x: splitDate, y: totalUnits || 0 },
-          ];
+          const ySales = Number(totalSales);
+          const yUnits = Number(totalUnits);
+          totalSalesLine.data.push({ x: splitDate, y: Number.isFinite(ySales) ? ySales : 0 });
+          totalUnitsLine.data.push({ x: splitDate, y: Number.isFinite(yUnits) ? yUnits : 0 });
         }
       });
     } catch (error) {
@@ -108,10 +104,10 @@ const Daily = () => {
   }, [data, startDate, endDate, view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <Box m="1.5rem 2.5rem">
+    <Box m="1.5rem 2.5rem" sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: 'calc(100vh - 3rem)' }}>
       <Header title="DAILY SALES" subtitle="Chart of daily sales" />
-      <Box height="75vh">
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Box sx={{ flex: '1 1 auto', minWidth: 0, overflow: 'visible', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2, flexWrap: 'wrap', gap: 2 }}>
           <Box display="flex" gap="1rem">
             <Button
               variant={view === "sales" ? "contained" : "outlined"}
@@ -149,9 +145,22 @@ const Daily = () => {
           </Box>
         </Box>
 
-        {data ? (
-          <ResponsiveLine
-            data={formattedData}
+        {isError ? (
+          <Box sx={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${theme.palette.neutral?.[300] || '#ccc'}`, borderRadius: 1 }}>
+            <Typography color="text.secondary">Failed to load data</Typography>
+          </Box>
+        ) : isLoading ? (
+          <Box sx={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography color="text.secondary">Loading...</Typography>
+          </Box>
+        ) : (!formattedData || !formattedData.length || !formattedData[0]?.data?.length) ? (
+          <Box sx={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${theme.palette.neutral?.[300] || '#ccc'}`, borderRadius: 1 }}>
+            <Typography color="text.secondary">No data to display</Typography>
+          </Box>
+        ) : (
+          <Box sx={{ width: '100%', height: 'calc(100vh - 340px)', minHeight: 460 }}>
+            <ResponsiveLine
+              data={formattedData}
             theme={{
               axis: {
                 domain: {
@@ -186,7 +195,7 @@ const Daily = () => {
               },
             }}
             colors={{ datum: "color" }}
-            margin={{ top: 20, right: 50, bottom: 50, left: 70 }}
+            margin={{ top: 20, right: 50, bottom: 100, left: 70 }}
             xScale={{ type: "point" }}
             yScale={{
               type: "linear",
@@ -206,8 +215,9 @@ const Daily = () => {
               tickPadding: 5,
               tickRotation: 0,
               legend: "Date",
-              legendOffset: 36,
+              legendOffset: 40,
               legendPosition: "middle",
+              tickRotation: 20,
             }}
             axisLeft={{
               orient: "left",
@@ -233,7 +243,7 @@ const Daily = () => {
                 direction: "column",
                 justify: false,
                 translateX: 30,
-                translateY: -40,
+                translateY: -20,
                 itemsSpacing: 0,
                 itemDirection: "left-to-right",
                 itemWidth: 80,
@@ -254,8 +264,7 @@ const Daily = () => {
               },
             ]}
           />
-        ) : (
-          <>Loading...</>
+          </Box>
         )}
       </Box>
     </Box>

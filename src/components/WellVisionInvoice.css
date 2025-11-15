@@ -1,19 +1,32 @@
-/* WellVisionInvoice.css */
+/* WellVisionInvoice.css - Full redesign to match provided invoice image */
 
-.bill-container {
-  width: 1000px;
-  margin: 0 auto;
-  border: 5px solid black;
-  padding: 20px;
-  font-family: 'Arial', sans-serif;
-  background: white;
-  color: black;
+:root {
+  --red: #E00000;
+  --red-dark: #C00000;
+  --black: #000;
+  --grey: #6b6b6b;
 }
 
+/* Sheet container */
+.bill-container {
+  width: 1000px;
+  max-width: 100%;
+  margin: 0 auto 60px; /* keep room for action bar */
+  background: #fff;
+  color: #000;
+  border: 6px solid #000; /* outer black frame like image */
+  padding: 18px 22px 10px;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  transform-origin: top center;
+}
+
+/* Header */
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .logo-section {
@@ -22,144 +35,284 @@
 }
 
 .logo {
-  height: 80px;
-  margin-right: 20px;
+  height: 84px;
+  width: auto;
+  margin-right: 14px;
 }
 
 .logo-section h1 {
-  color: #E00000;
-  font-size: 28px;
-  margin: 0;
-  font-weight: bold;
+  margin: 2px 0 2px;
+  font-size: 30px;
+  color: var(--red);
+  font-weight: 800;
+  letter-spacing: 1px;
 }
 
 .tagline {
-  font-weight: bold;
-  font-size: 14px;
-  margin-top: -4px;
+  margin: 0 0 4px;
+  font-weight: 700;
+  font-size: 12px;
 }
 
 .br-number {
-  font-size: 13px;
-  font-weight: bold;
-  margin: 4px 0;
+  margin: 6px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.services-box {
+  position: relative;
+  display: inline-block;
+  background: #1c1c1c;
+  color: #fff;
+  border: 2px solid #000;
+  border-radius: 22px; /* pill like in image */
+  padding: 8px 14px;
+  margin-top: 2px;
 }
 
 .services {
   font-size: 12px;
   font-style: italic;
-  max-width: 550px;
-}
-
-.services-box {
-  border: 1px solid #000;
-  border-radius: 10px;
-  padding: 10px;
-  margin-top: 5px;
-  background-color: #918f8f;
+  line-height: 1.35;
+  max-width: 560px;
 }
 
 .contact-section {
-  font-size: 13px;
-  font-weight: bold;
   text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
+/* Top info rows */
 .info-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
   font-size: 14px;
-  margin: 10px 0;
-  margin-right: 20px;
-  margin-left: 10px;
+  margin: 12px 6px 0 6px;
+}
+
+.info-row:nth-of-type(2) {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.info-row:nth-of-type(3) {
+  grid-template-columns: 1fr;
 }
 
 .info-row span {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
 }
 
-.error-message {
-  color: red;
-  font-size: 12px;
-  margin-top: 2px;
-}
-
-.items-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  margin-bottom: 20px;
-}
-
-.items-table th {
-  background-color: #E00000;
-  color: white;
-  border: 1px solid black;
-  padding: 5px;
-  font-size: 14px;
-}
-
-.items-table td {
-  border: 1px solid black;
-  padding: 10px;
-  height: 40px;
-}
-
-.footer-section {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.signature {
-  text-align: center;
-  font-size: 14px;  
-  margin-top: 60px;
-}
-
-.amounts {
-  font-size: 14px;
-  line-height: 1.8;
-}
-
-.notice {
-  font-size: 12px;
-  text-align: center;
-  margin-top: 20px;
-}
-
-.sinhala {
-  font-family: 'Noto Sans Sinhala', sans-serif;
-}
-
-.notice-bottom {
-  margin-top: 10px;
-}
-
-.galewela {
-  background-color: #E00000;
-  color: white;
-  font-weight: bold;
-  font-size: 16px;
-  text-align: center;
-  padding: 5px 15px;
-  margin-top: 15px;
-}
-
-/* Input styles matching inline React styles */
+/* Inputs to look like dotted lines */
 input[type="text"],
 input[type="number"],
 input[type="date"],
 input[type="tel"] {
   border: none;
-  border-bottom: 1px dotted black;
+  border-bottom: 1px dotted #000;
   outline: none;
   background: transparent;
   font-size: 14px;
   padding: 2px 4px;
+  min-width: 40px;
 }
 
 input[aria-invalid="true"] {
-  border-bottom: 2px solid red !important;
+  border-bottom: 2px solid #e22 !important;
+}
+
+.error-message {
+  color: #e22;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Items table */
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  margin-bottom: 14px;
+  table-layout: fixed;
+}
+
+.items-table th {
+  background: var(--red);
+  color: #fff;
+  border: 1px solid #000;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+.items-table th:nth-child(1) { width: 25%; }
+.items-table th:nth-child(2) { width: 45%; }
+.items-table th:nth-child(3) { width: 15%; }
+.items-table th:nth-child(4) { width: 15%; }
+
+.items-table td {
+  border: 1px solid #000;
+  height: 46px; /* matches tall row look */
+  padding: 0 8px;
+}
+
+/* Footer section with signature and amount grid */
+.footer-section {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.signature {
+  align-self: end;
+  text-align: left;
+  font-size: 14px;
+}
+
+.signature::before {
+  content: "";
+  display: block;
+  height: 1px;
+  border-bottom: 1px dotted #000;
+  margin: 24px 0 4px;
+}
+
+.signature::after {
+  content: "Signature";
+  display: block;
+  text-align: left;
+  margin-top: 4px;
+}
+
+.amounts {
+  font-size: 14px;
+}
+
+.amounts p {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.amounts input[type="text"],
+.amounts input[type="number"] {
+  justify-self: end;
+  width: 180px;
+}
+
+/* Notice area */
+.notice {
+  text-align: center;
+  font-size: 12px;
+  color: #000;
+  margin-top: 8px;
+}
+
+.sinhala {
+  font-family: 'Noto Sans Sinhala', Arial, Helvetica, sans-serif;
+}
+
+.notice-bottom {
+  margin-top: 8px;
+}
+
+/* Red footer badge */
+.galewela {
+  width: 160px;
+  margin-left: auto;
+  background: var(--red);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  text-align: center;
+  padding: 6px 14px;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+
+/* Bottom actions (shown on screen, hidden in print) */
+.invoice-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  padding: 10px 12px;
+  background: #fff;
+  border-top: 1px solid #e5e5e5;
+  z-index: 50;
+}
+
+.save-button,
+.print-button {
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  border: 2px solid var(--red);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.save-button {
+  background: var(--red);
+  color: #fff;
+}
+
+.save-button:hover:not(:disabled) { background: var(--red-dark); }
+.save-button:disabled { background: #cfcfcf; color: #777; border-color: #cfcfcf; cursor: not-allowed; }
+
+.print-button { background: #fff; color: var(--red); }
+.print-button:hover { background: var(--red); color: #fff; }
+
+/* Print styles to mimic the artwork when printing */
+@media (max-height: 900px) {
+  /* Scale down the entire sheet to fit shorter screens */
+  .bill-container { transform: scale(0.9); }
+}
+@media (max-height: 800px) {
+  .bill-container { transform: scale(0.85); }
+}
+@media (max-height: 700px) {
+  .bill-container { transform: scale(0.8); }
+}
+@media (max-height: 620px) {
+  .bill-container { transform: scale(0.75); }
+}
+
+@media print {
+  /* Hide everything but the invoice */
+  body { background: #fff; }
+  #root > * { display: none !important; }
+  .bill-container { display: block !important; }
+  .invoice-actions { display: none !important; }
+
+  /* Remove any scaling for print and fit page */
+  .bill-container {
+    transform: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    border: none; /* cleaner print */
+    margin: 0 !important;
+    padding: 0 6mm !important; /* small margins for printer */
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure header red background prints reliably */
+  .items-table th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
