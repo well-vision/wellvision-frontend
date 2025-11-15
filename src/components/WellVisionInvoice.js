@@ -397,9 +397,14 @@ const WellVisionInvoice = () => {
 
       <div className="galewela">Galewela</div>
 
-      {/* Action buttons intentionally removed per keyboard shortcuts requirement.
-          Use Ctrl/Cmd+S to Save and Ctrl/Cmd+P to Print. */}
-      <div className="invoice-actions" style={{ display: 'none' }} aria-hidden="true" />
+      <div className="invoice-actions">
+        <button className="save-button" type="button" onClick={saveInvoice} disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : 'Save'}
+        </button>
+        <button className="print-button" type="button" onClick={() => window.print()}>
+          Print
+        </button>
+      </div>
     </form>
   );
 };

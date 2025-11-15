@@ -11,12 +11,13 @@ import CustomerProfile from './components/CustomerProfile';
 import WellVisionInvoice from './components/WellVisionInvoice';
 import ProfilePage from './components/ProfilePage';
 import DailyReports from './components/DailyReports';
+import Products from './components/Products';
 //import Orders from './components/OrderDashboard';
 
 // Admin components
 import AdminLayout from './admin/scenes/layout';
 import AdminDashboard from './admin/scenes/dashboard';
-import Products from './admin/scenes/products';
+import AdminProducts from './admin/scenes/products';
 import Customers from './admin/scenes/customers';
 import Transactions from './admin/scenes/transactions';
 import Geography from './admin/scenes/geography';
@@ -43,7 +44,7 @@ export default function DashboardRoutes() {
       <Routes>
         <Route path="/admin/*" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="products" element={<Products />} />
+          <Route path="products" element={<AdminProducts />} />
           <Route path="customers" element={<Customers />} />
           <Route path="transactions" element={<Transactions />} />
           <Route path="geography" element={<Geography />} />
@@ -64,6 +65,7 @@ export default function DashboardRoutes() {
 
   // Otherwise, normal user routes
   const getActivePage = () => {
+    if (location.pathname.startsWith('/products')) return 'products';
     if (location.pathname.startsWith('/daily-reports')) return 'daily-reports';
     if (location.pathname.startsWith('/customers')) return 'customers';
     if (location.pathname.startsWith('/customer/')) return 'customers';
@@ -74,6 +76,9 @@ export default function DashboardRoutes() {
 
   const handleNavigate = (page) => {
     switch (page) {
+      case 'products':
+        navigate('/products');
+        break;
       case 'daily-reports':
         navigate('/daily-reports');
         break;
@@ -96,6 +101,7 @@ export default function DashboardRoutes() {
     <DashboardLayout activePage={getActivePage()} onNavigate={handleNavigate}>
       <Routes>
         <Route path="/dashboard" element={<PrivateRoute><SalesDashboard /></PrivateRoute>} />
+        <Route path="/products" element={<PrivateRoute><Products /></PrivateRoute>} />
         <Route path="/daily-reports" element={<PrivateRoute><DailyReports /></PrivateRoute>} />
         <Route path="/customers" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
         <Route path="/customer/:customerId" element={<PrivateRoute><CustomerProfile /></PrivateRoute>} />
