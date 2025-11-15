@@ -23,7 +23,9 @@ export default function SalesDashboard({ onNavigate }) {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/orders');
+        const response = await fetch('http://localhost:4000/api/orders', {
+          credentials: 'include'
+        });
         const data = await response.json();
 
         if (data.success) {

@@ -1,16 +1,6 @@
 import React, { useState, useMemo } from "react";
 import './DailyReports.css';
-import {
-  Box,
-  useTheme,
-  Button,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import SidebarMenu from '../components/SidebarMenu';
 import {
   Download,
   FileText,
@@ -18,6 +8,8 @@ import {
   Receipt,
   DollarSign,
   Calendar,
+  BarChart3,
+  Package
 } from "lucide-react";
 import { ResponsiveLine } from "@nivo/line";
 import { DataGrid } from "@mui/x-data-grid";
@@ -27,11 +19,10 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-const DailyReports = () => {
+function DailyReports() {
   const [startDate, setStartDate] = useState(new Date("2024-09-01"));
   const [endDate, setEndDate] = useState(new Date("2024-09-18"));
   const [view, setView] = useState("sales");
-  const theme = useTheme();
 
   // Sample data for demonstration
   const sampleData = [
@@ -61,7 +52,7 @@ const DailyReports = () => {
       const itemDate = new Date(item.date);
       return itemDate >= startDate && itemDate <= endDate;
     });
-  }, [sampleData, startDate, endDate]);
+  }, [startDate, endDate]);
 
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
@@ -90,7 +81,7 @@ const DailyReports = () => {
 
     const salesLine = {
       id: "Total Sales",
-      color: theme.palette.secondary.main,
+      color: "#0d9488",
       data: filteredData.map((item) => ({
         x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         y: item.totalSales,
@@ -99,7 +90,7 @@ const DailyReports = () => {
 
     const unitsLine = {
       id: "Total Units",
-      color: theme.palette.secondary[600],
+      color: "#14b8a6",
       data: filteredData.map((item) => ({
         x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         y: item.totalUnits,
@@ -107,40 +98,40 @@ const DailyReports = () => {
     };
 
     return view === "sales" ? [salesLine] : [unitsLine];
-  }, [filteredData, view, theme.palette.secondary]);
+  }, [filteredData, view]);
 
   // Data grid columns
   const columns = [
     {
       field: "date",
       headerName: "Date",
-      width: 120,
+      width: 150,
       valueFormatter: (params) => new Date(params.value).toLocaleDateString(),
     },
     {
       field: "totalSales",
       headerName: "Total Sales",
-      width: 120,
+      width: 150,
       type: "number",
     },
     {
       field: "totalUnits",
       headerName: "Total Units",
-      width: 120,
+      width: 150,
       type: "number",
     },
     {
       field: "totalInvoices",
       headerName: "Total Invoices",
-      width: 140,
+      width: 150,
       type: "number",
     },
     {
       field: "revenue",
-      headerName: "Revenue ($)",
-      width: 120,
+      headerName: "Revenue (Rs.)",
+      width: 180,
       type: "number",
-      valueFormatter: (params) => `$${params.value.toLocaleString()}`,
+      valueFormatter: (params) => `Rs. ${params.value.toLocaleString()}`,
     },
   ];
 
@@ -161,7 +152,7 @@ const DailyReports = () => {
       item.totalSales,
       item.totalUnits,
       item.totalInvoices,
-      `$${item.revenue.toLocaleString()}`,
+      `Rs. ${item.revenue.toLocaleString()}`,
     ]);
 
     doc.autoTable({
@@ -174,359 +165,322 @@ const DailyReports = () => {
   };
 
   return (
-    <div className="daily-reports-container">
-      {/* Header */}
-      <h1 className="reports-header-title">DAILY REPORTS</h1>
-      <p className="reports-header-subtitle">
-        Comprehensive daily sales and performance analytics
-      </p>
+    <div className="reports-page">
+      <SidebarMenu active="daily-reports" />
+      
+      <div className="reports-main-content">
+        {/* Header */}
+        <div className="reports-header">
+          <div className="reports-header-content">
+            <div className="reports-header-title">
+              <h2>Daily Reports</h2>
+              <p className="reports-subtitle">Comprehensive daily sales and performance analytics</p>
+            </div>
+            <div className="reports-header-actions">
+              <button className="export-btn" onClick={exportToExcel} title="Export to Excel">
+                <Download size={16} />
+                Excel
+              </button>
+              <button className="export-btn" onClick={exportToPDF} title="Export to PDF">
+                <FileText size={16} />
+                PDF
+              </button>
+            </div>
+          </div>
+        </div>
 
-      {/* Summary Cards */}
-      <Grid container spacing={2} mb={3}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: theme.palette.background.alt }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography variant="h6" color={theme.palette.secondary[100]}>
-                    Total Sales
-                  </Typography>
-                  <Typography variant="h4" color={theme.palette.secondary[100]}>
-                    {summaryStats.totalSales.toLocaleString()}
-                  </Typography>
-                </Box>
-                <TrendingUp size={32} color={theme.palette.secondary.main} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        {/* Content */}
+        <div className="reports-content">
+          {/* Summary Cards */}
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon" style={{ backgroundColor: '#DBEAFE' }}>
+                <TrendingUp size={24} style={{ color: '#1E40AF' }} />
+              </div>
+              <div className="stat-details">
+                <p className="stat-label">Total Sales</p>
+                <h3 className="stat-value">{summaryStats.totalSales.toLocaleString()}</h3>
+                <p className="stat-change positive">+12% from last period</p>
+              </div>
+            </div>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: theme.palette.background.alt }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography variant="h6" color={theme.palette.secondary[100]}>
-                    Total Revenue
-                  </Typography>
-                  <Typography variant="h4" color={theme.palette.secondary[100]}>
-                    ${summaryStats.totalRevenue.toLocaleString()}
-                  </Typography>
-                </Box>
-                <DollarSign size={32} color={theme.palette.secondary.main} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ backgroundColor: '#DCFCE7' }}>
+                <DollarSign size={24} style={{ color: '#166534' }} />
+              </div>
+              <div className="stat-details">
+                <p className="stat-label">Total Revenue</p>
+                <h3 className="stat-value">Rs. {summaryStats.totalRevenue.toLocaleString()}</h3>
+                <p className="stat-change positive">+8% from last period</p>
+              </div>
+            </div>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: theme.palette.background.alt }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography variant="h6" color={theme.palette.secondary[100]}>
-                    Total Invoices
-                  </Typography>
-                  <Typography variant="h4" color={theme.palette.secondary[100]}>
-                    {summaryStats.totalInvoices.toLocaleString()}
-                  </Typography>
-                </Box>
-                <Receipt size={32} color={theme.palette.secondary.main} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ backgroundColor: '#FEF3C7' }}>
+                <Receipt size={24} style={{ color: '#92400E' }} />
+              </div>
+              <div className="stat-details">
+                <p className="stat-label">Total Invoices</p>
+                <h3 className="stat-value">{summaryStats.totalInvoices.toLocaleString()}</h3>
+                <p className="stat-change positive">+15% from last period</p>
+              </div>
+            </div>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: theme.palette.background.alt }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography variant="h6" color={theme.palette.secondary[100]}>
-                    Daily Average
-                  </Typography>
-                  <Typography variant="h4" color={theme.palette.secondary[100]}>
-                    ${summaryStats.avgDailyRevenue.toLocaleString()}
-                  </Typography>
-                </Box>
-                <Calendar size={32} color={theme.palette.secondary.main} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ backgroundColor: '#F3E8FF' }}>
+                <Calendar size={24} style={{ color: '#6D28D9' }} />
+              </div>
+              <div className="stat-details">
+                <p className="stat-label">Daily Average</p>
+                <h3 className="stat-value">Rs. {summaryStats.avgDailyRevenue.toLocaleString()}</h3>
+                <p className="stat-change">Avg. per day</p>
+              </div>
+            </div>
 
-      {/* Controls */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box display="flex" gap={2}>
-          <Button
-            sx={{
-              backgroundColor: view === "sales" ? theme.palette.secondary[300] : "transparent",
-              color: view === "sales" ? theme.palette.primary[600] : theme.palette.secondary[100],
-            }}
-            onClick={() => setView("sales")}
-          >
-            Sales
-          </Button>
-          <Button
-            sx={{
-              backgroundColor: view === "units" ? theme.palette.secondary[300] : "transparent",
-              color: view === "units" ? theme.palette.primary[600] : theme.palette.secondary[100],
-            }}
-            onClick={() => setView("units")}
-          >
-            Units
-          </Button>
-        </Box>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ backgroundColor: '#E0F2F1' }}>
+                <Package size={24} style={{ color: '#0d9488' }} />
+              </div>
+              <div className="stat-details">
+                <p className="stat-label">Total Units</p>
+                <h3 className="stat-value">{summaryStats.totalUnits.toLocaleString()}</h3>
+                <p className="stat-change">Units sold</p>
+              </div>
+            </div>
 
-        <Box display="flex" gap={1}>
-          <Tooltip title="Export to Excel">
-            <IconButton onClick={exportToExcel} sx={{ color: theme.palette.secondary[100] }}>
-              <Download size={20} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Export to PDF">
-            <IconButton onClick={exportToPDF} sx={{ color: theme.palette.secondary[100] }}>
-              <FileText size={20} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ backgroundColor: '#FFF7ED' }}>
+                <BarChart3 size={24} style={{ color: '#EA580C' }} />
+              </div>
+              <div className="stat-details">
+                <p className="stat-label">Avg. Sales/Day</p>
+                <h3 className="stat-value">{summaryStats.avgDailySales.toLocaleString()}</h3>
+                <p className="stat-change">Daily average</p>
+              </div>
+            </div>
+          </div>
 
-      {/* Date Pickers */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box display="flex" gap={2}>
-          <Box>
-            <Typography variant="body2" color={theme.palette.secondary[200]} mb={1}>
-              Start Date
-            </Typography>
-            <DatePicker
-              selected={startDate}
-              onChange={(date) => setStartDate(date)}
-              selectsStart
-              startDate={startDate}
-              endDate={endDate}
-              dateFormat="yyyy-MM-dd"
-            />
-          </Box>
-          <Box>
-            <Typography variant="body2" color={theme.palette.secondary[200]} mb={1}>
-              End Date
-            </Typography>
-            <DatePicker
-              selected={endDate}
-              onChange={(date) => setEndDate(date)}
-              selectsEnd
-              startDate={startDate}
-              endDate={endDate}
-              minDate={startDate}
-              dateFormat="yyyy-MM-dd"
-            />
-          </Box>
-        </Box>
-      </Box>
+          {/* Controls & Filters */}
+          <div className="reports-controls">
+            <div className="date-filters">
+              <div className="date-picker-group">
+                <label className="date-label">Start Date</label>
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  selectsStart
+                  startDate={startDate}
+                  endDate={endDate}
+                  dateFormat="yyyy-MM-dd"
+                  className="date-picker-input"
+                />
+              </div>
+              <div className="date-picker-group">
+                <label className="date-label">End Date</label>
+                <DatePicker
+                  selected={endDate}
+                  onChange={(date) => setEndDate(date)}
+                  selectsEnd
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={startDate}
+                  dateFormat="yyyy-MM-dd"
+                  className="date-picker-input"
+                />
+              </div>
+            </div>
 
-      {/* Chart */}
-      <Box
-        className="chart-container"
-        mb={4}
-        sx={{
-          position: "relative",
-          overflow: "visible",
-          padding: "20px",
-          backgroundColor: theme.palette.background.alt,
-          borderRadius: "8px",
-          border: `1px solid ${theme.palette.secondary[200]}`,
-          "& > div": {
-            overflow: "visible !important",
-          },
-          "& svg": {
-            overflow: "visible !important",
-          },
-        }}
-      >
-        {formattedData.length > 0 ? (
-          <ResponsiveLine
-            data={formattedData}
-            theme={{
-              axis: {
-                domain: {
-                  line: {
-                    stroke: theme.palette.secondary[200],
-                    strokeWidth: 2,
+            <div className="view-toggle">
+              <button
+                className={`toggle-btn ${view === 'sales' ? 'active' : ''}`}
+                onClick={() => setView('sales')}
+              >
+                Sales
+              </button>
+              <button
+                className={`toggle-btn ${view === 'units' ? 'active' : ''}`}
+                onClick={() => setView('units')}
+              >
+                Units
+              </button>
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div className="chart-container">
+            <h3 className="section-title">
+              {view === 'sales' ? 'Sales Trend' : 'Units Sold Trend'}
+            </h3>
+            {formattedData.length > 0 ? (
+              <div className="chart-wrapper">
+                <ResponsiveLine
+                  data={formattedData}
+                  theme={{
+                    axis: {
+                      domain: {
+                        line: {
+                          stroke: "#9ca3af",
+                          strokeWidth: 1,
+                        },
+                      },
+                      legend: {
+                        text: {
+                          fill: "#6b7280",
+                          fontSize: 14,
+                          fontWeight: 600,
+                        },
+                      },
+                      ticks: {
+                        line: {
+                          stroke: "#9ca3af",
+                          strokeWidth: 1,
+                        },
+                        text: {
+                          fill: "#6b7280",
+                          fontSize: 12,
+                        },
+                      },
+                    },
+                    legends: {
+                      text: {
+                        fill: "#6b7280",
+                        fontSize: 13,
+                      },
+                    },
+                    tooltip: {
+                      container: {
+                        background: "white",
+                        color: "#1f2937",
+                        fontSize: 13,
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                        padding: "12px",
+                      },
+                    },
+                    grid: {
+                      line: {
+                        stroke: "#e5e7eb",
+                        strokeWidth: 1,
+                      },
+                    },
+                  }}
+                  colors={{ datum: "color" }}
+                  margin={{ top: 50, right: 110, bottom: 80, left: 80 }}
+                  xScale={{ type: "point" }}
+                  yScale={{
+                    type: "linear",
+                    min: 0,
+                    max: "auto",
+                    stacked: false,
+                    reverse: false,
+                  }}
+                  yFormat=" >-.0f"
+                  curve="catmullRom"
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={{
+                    orient: "bottom",
+                    tickSize: 5,
+                    tickPadding: 10,
+                    tickRotation: -45,
+                    legend: "Date",
+                    legendOffset: 70,
+                    legendPosition: "middle",
+                  }}
+                  axisLeft={{
+                    orient: "left",
+                    tickValues: 5,
+                    tickSize: 5,
+                    tickPadding: 10,
+                    tickRotation: 0,
+                    legend: `Total ${view === "sales" ? "Sales" : "Units"}`,
+                    legendOffset: -70,
+                    legendPosition: "middle",
+                  }}
+                  enableGridX={false}
+                  enableGridY={true}
+                  pointSize={8}
+                  pointColor={{ theme: "background" }}
+                  pointBorderWidth={2}
+                  pointBorderColor={{ from: "serieColor" }}
+                  pointLabelYOffset={-12}
+                  useMesh={true}
+                  legends={[
+                    {
+                      anchor: "bottom-right",
+                      direction: "column",
+                      justify: false,
+                      translateX: 100,
+                      translateY: 0,
+                      itemsSpacing: 0,
+                      itemDirection: "left-to-right",
+                      itemWidth: 80,
+                      itemHeight: 20,
+                      itemOpacity: 0.75,
+                      symbolSize: 12,
+                      symbolShape: "circle",
+                      symbolBorderColor: "rgba(0, 0, 0, .5)",
+                      effects: [
+                        {
+                          on: "hover",
+                          style: {
+                            itemBackground: "rgba(0, 0, 0, .03)",
+                            itemOpacity: 1,
+                          },
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              </div>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-state-icon">📊</div>
+                <h3 className="empty-state-title">No data available</h3>
+                <p className="empty-state-description">
+                  No data available for the selected date range
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Data Table */}
+          <div className="data-table-container">
+            <h3 className="section-title">Detailed Report</h3>
+            <div className="data-table-wrapper">
+              <DataGrid
+                rows={filteredData.map((item, index) => ({ ...item, id: index }))}
+                columns={columns}
+                pageSize={10}
+                rowsPerPageOptions={[10, 25, 50]}
+                disableSelectionOnClick
+                sx={{
+                  border: 'none',
+                  '& .MuiDataGrid-root': {
+                    border: 'none',
                   },
-                },
-                legend: {
-                  text: {
-                    fill: theme.palette.secondary[200],
-                    fontSize: 14,
+                  '& .MuiDataGrid-cell': {
+                    borderBottom: '1px solid #e5e7eb',
+                    color: '#1f2937',
+                  },
+                  '& .MuiDataGrid-columnHeaders': {
+                    backgroundColor: '#f9fafb',
+                    color: '#1f2937',
+                    borderBottom: '2px solid #e5e7eb',
                     fontWeight: 600,
                   },
-                },
-                ticks: {
-                  line: {
-                    stroke: theme.palette.secondary[200],
-                    strokeWidth: 2,
+                  '& .MuiDataGrid-footerContainer': {
+                    backgroundColor: '#f9fafb',
+                    borderTop: '1px solid #e5e7eb',
                   },
-                  text: {
-                    fill: theme.palette.secondary[200],
-                    fontSize: 13,
-                    fontWeight: 500,
-                  },
-                },
-              },
-              legends: {
-                text: {
-                  fill: theme.palette.secondary[200],
-                  fontSize: 13,
-                },
-              },
-              tooltip: {
-                container: {
-                  color: theme.palette.primary.main,
-                  background: theme.palette.background.paper,
-                  boxShadow: theme.shadows[4],
-                  borderRadius: "4px",
-                  padding: "8px",
-                },
-              },
-              grid: {
-                line: {
-                  stroke: theme.palette.secondary[300],
-                  strokeWidth: 1,
-                  opacity: 0.6,
-                },
-              },
-            }}
-            colors={{ datum: "color" }}
-            margin={{ top: 20, right: 100, bottom: 60, left: 80 }}
-            xScale={{ type: "point" }}
-            yScale={{
-              type: "linear",
-              min: 0,
-              max: "auto",
-              stacked: false,
-              reverse: false,
-            }}
-            yFormat=" >-.0f"
-            curve="catmullRom"
-            enableArea={false}
-            axisTop={null}
-            axisRight={null}
-            axisBottom={{
-              orient: "bottom",
-              tickSize: 10,
-              tickPadding: 20,
-              tickRotation: -45,
-              legend: "Date",
-              legendOffset: 60,
-              legendPosition: "middle",
-              format: (value) => value,
-              tickValues: filteredData.length <= 15 ? "every 1 day" : "every 2 days",
-            }}
-            axisLeft={{
-              orient: "left",
-              tickValues: 5,
-              tickSize: 10,
-              tickPadding: 15,
-              tickRotation: 0,
-              legend: `Total ${view === "sales" ? "Sales" : "Units"}`,
-              legendOffset: -80,
-              legendPosition: "middle",
-              format: (value) => value.toLocaleString(),
-            }}
-            enableGridX={true}
-            enableGridY={true}
-            gridXValues={filteredData.length <= 10 ? filteredData.map((_, i) => i) : undefined}
-            gridYValues={5}
-            pointSize={10}
-            pointColor={{ theme: "background" }}
-            pointBorderWidth={3}
-            pointBorderColor={{ from: "serieColor" }}
-            pointLabelYOffset={-18}
-            useMesh={true}
-            animate={false}
-            legends={[
-              {
-                anchor: "top-right",
-                direction: "column",
-                justify: false,
-                translateX: -50,
-                translateY: 30,
-                itemsSpacing: 8,
-                itemDirection: "left-to-right",
-                itemWidth: 120,
-                itemHeight: 24,
-                itemOpacity: 0.95,
-                symbolSize: 14,
-                symbolShape: "circle",
-                symbolBorderColor: "rgba(0, 0, 0, .5)",
-                effects: [
-                  {
-                    on: "hover",
-                    style: {
-                      itemBackground: "rgba(0, 0, 0, .03)",
-                      itemOpacity: 1,
-                    },
-                  },
-                ],
-              },
-            ]}
-          />
-        ) : (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="100%"
-            sx={{
-              backgroundColor: theme.palette.background.alt,
-              borderRadius: "8px",
-              border: `1px solid ${theme.palette.secondary[200]}`,
-            }}
-          >
-            <Typography variant="h6" color={theme.palette.secondary[200]}>
-              No data available for the selected date range
-            </Typography>
-          </Box>
-        )}
-      </Box>
-
-      {/* Data Grid */}
-      <Box
-        sx={{
-          height: 400,
-          width: "100%",
-          "& .MuiDataGrid-root": {
-            border: "none",
-            backgroundColor: theme.palette.background.alt,
-          },
-          "& .MuiDataGrid-cell": {
-            borderBottom: `1px solid ${theme.palette.secondary[200]}`,
-            color: theme.palette.secondary[100],
-          },
-          "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: theme.palette.background.alt,
-            color: theme.palette.secondary[100],
-            borderBottom: `1px solid ${theme.palette.secondary[200]}`,
-          },
-          "& .MuiDataGrid-footerContainer": {
-            backgroundColor: theme.palette.background.alt,
-            color: theme.palette.secondary[100],
-            borderTop: `1px solid ${theme.palette.secondary[200]}`,
-          },
-        }}
-      >
-        <DataGrid
-          rows={filteredData.map((item, index) => ({ ...item, id: index }))}
-          columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10]}
-          disableSelectionOnClick
-        />
-      </Box>
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default DailyReports;

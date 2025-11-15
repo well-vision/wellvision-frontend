@@ -1,5 +1,21 @@
-# Daily Reports Chart Fix TODO
+# Well Vision - Products and Orders Integration TODO
 
-- [x] Update DailyReports.js: Reduce chart margins (bottom: 80 to 60) and legend offset (100 to 60)
-- [x] Update DailyReports.css: Reduce chart container height (700px to 500px) and adjust padding (30px to 20px)
-- [x] Test the chart display to ensure bottom is not cut and fits screen without scrolling (skipped due to terminal issues)
+## Frontend Changes
+- [ ] Update OrderDashboard.js: Add "Browse Products" button in Add Order modal
+- [ ] Update OrderDashboard.js: Implement navigation to Products page with selection mode
+- [ ] Update Products.js: Add selection mode detection (URL params or state)
+- [ ] Update Products.js: Add product selection functionality
+- [ ] Update Products.js: Add return navigation to orders with selected products
+
+## Backend Changes
+- [x] Update orderModel.js: Add productId to order items schema
+- [x] Update orderController.js: Add stock availability checking
+- [x] Update orderController.js: Implement atomic stock reduction using MongoDB transactions
+- [x] Update orderController.js: Add error handling for insufficient stock
+
+## Testing
+- [ ] Test navigation flow between Orders and Products pages
+- [ ] Test product selection and return to order creation
+- [ ] Test stock reduction on successful order creation
+- [ ] Test insufficient stock error handling
+- [ ] Verify transaction atomicity prevents race conditions

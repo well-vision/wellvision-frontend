@@ -10,35 +10,114 @@ import {
   Settings,
   User,
   LogOut,
-  Logs
+  Logs,
+  ChevronDown,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function SidebarMenu({ active = 'home' }) {
   const { user, logoutUser } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(true);
+  const [expandedMenus, setExpandedMenus] = useState({});
+  const [notifications, setNotifications] = useState({
+    orders: 5,
+    lowStock: 3
+  });
   const sidebarRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Enhanced menu items with nested navigation and icons
   const menuItems = [
-    { label: 'Home', icon: <Home />, key: 'home' },
-    { label: 'Daily reports', icon: <BarChart3 />, key: 'daily-reports' },
-    { label: 'Customers', icon: <Users />, key: 'customers' },
-    { label: 'Product', icon: <Package />, key: 'products' },
-    { label: 'Invoice', icon: <FileText />, key: 'invoice' },
-    { label: 'Bills', icon: <CreditCard />, key: 'bills' },
-    { label: 'Order', icon: <Logs />, key: 'orders' }
+    { 
+      label: 'Dashboard', 
+      icon: <Home />, 
+      key: 'home',
+      path: '/dashboard',
+      description: 'Overview & Analytics'
+    },
+    { 
+      label: 'Daily Reports', 
+      icon: <BarChart3 />, 
+      key: 'daily-reports',
+      path: '/daily-reports',
+      description: 'Sales & Performance'
+    },
+    { 
+      label: 'Customers', 
+      icon: <Users />, 
+      key: 'customers',
+      path: '/customers',
+      description: 'Customer Management'
+    },
+    { 
+      label: 'Products', 
+      icon: <Package />, 
+      key: 'products',
+      path: '/products',
+      description: 'Inventory & Stock',
+      badge: notifications.lowStock > 0 ? notifications.lowStock : null,
+      badgeType: 'warning'
+    },
+    { 
+      label: 'Invoices', 
+      icon: <FileText />, 
+      key: 'invoice',
+      path: '/invoice',
+      description: 'Invoice Management'
+    },
+    { 
+      label: 'Bills', 
+      icon: <CreditCard />, 
+      key: 'bills',
+      path: '/bills',
+      description: 'Payment Tracking'
+    },
+    { 
+      label: 'Orders', 
+      icon: <Logs />, 
+      key: 'orders',
+      path: '/orders',
+      description: 'Order Processing',
+      badge: notifications.orders > 0 ? notifications.orders : null,
+      badgeType: 'info'
+    }
   ];
 
   const generalItems = [
-    { label: 'Settings', icon: <Settings />, key: 'settings' },
-    { label: 'Profile', icon: <User />, key: 'profile' }
+    { 
+      label: 'Settings', 
+      icon: <Settings />, 
+      key: 'settings',
+      path: '/settings',
+      description: 'System Configuration'
+    },
+    { 
+      label: 'Profile', 
+      icon: <User />, 
+      key: 'profile',
+      path: '/profile',
+      description: 'Your Account'
+    }
   ];
+
+  // Determine active menu based on current path
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const activeItem = [...menuItems, ...generalItems].find(
+      item => item.path === currentPath
+    );
+    if (activeItem) {
+      // Could update parent component's active state here if needed
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     function handleOutsideClick(e) {
-      if (isOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+      if (window.innerWidth < 768 && isOpen && sidebarRef.current && !sidebarRef.current.contains(e.target)) {
         setIsOpen(false);
       }
     }
@@ -46,38 +125,78 @@ export default function SidebarMenu({ active = 'home' }) {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [isOpen]);
 
-  const onKeyDown = (e, key) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      if (key === 'home') {
-        navigate('/dashboard');
+  // Handle responsive behavior
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth >= 768) {
+        setIsOpen(true);
       } else {
-        navigate(`/${key}`);
+        setIsOpen(false);
       }
+    }
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleNavigation = (path, key) => {
+    navigate(path);
+    // Close sidebar on mobile after navigation
+    if (window.innerWidth < 768) {
       setIsOpen(false);
     }
+  };
+
+  const onKeyDown = (e, path) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(path);
+      if (window.innerWidth < 768) {
+        setIsOpen(false);
+      }
+    }
+  };
+
+  const isActiveRoute = (path) => {
+    return location.pathname === path;
+  };
+
+  const renderBadge = (badge, badgeType) => {
+    if (!badge) return null;
+    
+    const badgeStyles = {
+      info: { backgroundColor: '#3b82f6', color: 'white' },
+      warning: { backgroundColor: '#f59e0b', color: 'white' },
+      success: { backgroundColor: '#10b981', color: 'white' },
+      error: { backgroundColor: '#ef4444', color: 'white' }
+    };
+
+    return (
+      <span 
+        className="menu-badge"
+        style={badgeStyles[badgeType] || badgeStyles.info}
+      >
+        {badge}
+      </span>
+    );
   };
 
   const renderNavItems = (items) =>
     items.map((item) => (
       <div
         key={item.key}
-        className={`menu-item ${active === item.key ? 'active' : ''}`}
-        onClick={() => {
-          if (item.key === 'home') {
-            navigate('/dashboard');
-          } else {
-            navigate(`/${item.key}`);
-          }
-          setIsOpen(false);
-        }}
+        className={`menu-item ${isActiveRoute(item.path) ? 'active' : ''}`}
+        onClick={() => handleNavigation(item.path, item.key)}
         role="link"
         tabIndex={0}
-        aria-current={active === item.key ? 'page' : undefined}
-        onKeyDown={(e) => onKeyDown(e, item.key)}
+        aria-current={isActiveRoute(item.path) ? 'page' : undefined}
+        onKeyDown={(e) => onKeyDown(e, item.path)}
+        title={item.description}
       >
         <span className="menu-icon">{item.icon}</span>
-        {item.label}
+        <span className="menu-label-text">{item.label}</span>
+        {item.badge && renderBadge(item.badge, item.badgeType)}
       </div>
     ));
 
@@ -89,8 +208,15 @@ export default function SidebarMenu({ active = 'home' }) {
   };
 
   const handleLogout = () => {
-    logoutUser();
-    navigate('/login');
+    if (window.confirm('Are you sure you want to logout?')) {
+      logoutUser();
+      navigate('/login');
+    }
+  };
+
+  const getStatusColor = () => {
+    // Could integrate with actual online status
+    return '#10b981'; // green for online
   };
 
   return (
@@ -104,6 +230,15 @@ export default function SidebarMenu({ active = 'home' }) {
         ☰
       </button>
 
+      {/* Overlay for mobile */}
+      {isOpen && window.innerWidth < 768 && (
+        <div 
+          className="sidebar-overlay"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <nav
         className={`sidebar ${isOpen ? 'open' : 'closed'}`}
         ref={sidebarRef}
@@ -111,31 +246,50 @@ export default function SidebarMenu({ active = 'home' }) {
         aria-label="Main sidebar navigation"
       >
         <div className="sidebar-logo">
-          <h1>Well Vision</h1>
-          <p>Logo</p>
+          <div className="logo-icon">👓</div>
+          <div className="logo-text">
+            <h1>Well Vision</h1>
+            <p>Spectacle Shop System</p>
+          </div>
         </div>
 
         <div className="sidebar-menu">
-          <p className="menu-label">MENU</p>
-          <div className="menu-nav">{renderNavItems(menuItems)}</div>
+          <div className="menu-section">
+            <p className="menu-label">
+              <TrendingUp size={14} />
+              MAIN MENU
+            </p>
+            <div className="menu-nav">{renderNavItems(menuItems)}</div>
+          </div>
 
-          <br />
-          <p className="menu-label">GENERAL</p>
-          <div className="menu-nav">{renderNavItems(generalItems)}</div>
+          <div className="menu-section">
+            <p className="menu-label">
+              <Settings size={14} />
+              GENERAL
+            </p>
+            <div className="menu-nav">{renderNavItems(generalItems)}</div>
+          </div>
 
-          <br />
-          <p className="menu-label">ACCOUNT</p>
-          <div
-            className="menu-item"
-            onClick={handleLogout}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') handleLogout();
-            }}
-          >
-            <span className="menu-icon"><LogOut /></span>
-            Logout
+          <div className="menu-section">
+            <p className="menu-label">
+              <LogOut size={14} />
+              ACCOUNT
+            </p>
+            <div
+              className="menu-item logout-item"
+              onClick={handleLogout}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleLogout();
+                }
+              }}
+            >
+              <span className="menu-icon"><LogOut /></span>
+              <span className="menu-label-text">Logout</span>
+            </div>
           </div>
         </div>
 
@@ -145,16 +299,35 @@ export default function SidebarMenu({ active = 'home' }) {
           tabIndex={0}
           onClick={() => navigate('/profile')}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') navigate('/profile');
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate('/profile');
+            }
           }}
           aria-label="Open profile"
         >
           <div className="user-profile-content">
-            <div className="user-avatar">{getInitials(user?.name)}</div>
+            <div className="user-avatar-wrapper">
+              <div className="user-avatar">{getInitials(user?.name)}</div>
+              <span 
+                className="status-indicator" 
+                style={{ backgroundColor: getStatusColor() }}
+                title="Online"
+              />
+            </div>
             <div className="user-info">
               <p className="user-name">{user?.name || 'User'}</p>
               <p className="user-email">{user?.email || 'user@example.com'}</p>
+              <p className="user-role">{user?.role || 'Administrator'}</p>
             </div>
+          </div>
+        </div>
+
+        {/* Quick Stats Footer */}
+        <div className="sidebar-footer">
+          <div className="quick-stat">
+            <AlertCircle size={14} />
+            <span>{notifications.lowStock} Low Stock Items</span>
           </div>
         </div>
       </nav>
