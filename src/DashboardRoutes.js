@@ -10,6 +10,7 @@ import CustomerDashboard from './components/CustomerDashboard';
 import CustomerProfile from './components/CustomerProfile';
 import WellVisionInvoice from './components/WellVisionInvoice';
 import ProfilePage from './components/ProfilePage';
+import DailyReports from './components/DailyReports';
 //import Orders from './components/OrderDashboard';
 
 // Admin components
@@ -48,6 +49,7 @@ export default function DashboardRoutes() {
           <Route path="geography" element={<Geography />} />
           <Route path="overview" element={<Overview />} />
           <Route path="daily" element={<Daily />} />
+          <Route path="daily-reports" element={<DailyReports />} />
           <Route path="monthly" element={<Monthly />} />
           <Route path="breakdown" element={<Breakdown />} />
           <Route path="admin" element={<Admin />} />
@@ -62,6 +64,7 @@ export default function DashboardRoutes() {
 
   // Otherwise, normal user routes
   const getActivePage = () => {
+    if (location.pathname.startsWith('/daily-reports')) return 'daily-reports';
     if (location.pathname.startsWith('/customers')) return 'customers';
     if (location.pathname.startsWith('/customer/')) return 'customers';
     if (location.pathname.startsWith('/invoice')) return 'invoice';
@@ -71,6 +74,9 @@ export default function DashboardRoutes() {
 
   const handleNavigate = (page) => {
     switch (page) {
+      case 'daily-reports':
+        navigate('/daily-reports');
+        break;
       case 'customers':
         navigate('/customers');
         break;
@@ -90,6 +96,7 @@ export default function DashboardRoutes() {
     <DashboardLayout activePage={getActivePage()} onNavigate={handleNavigate}>
       <Routes>
         <Route path="/dashboard" element={<PrivateRoute><SalesDashboard /></PrivateRoute>} />
+        <Route path="/daily-reports" element={<PrivateRoute><DailyReports /></PrivateRoute>} />
         <Route path="/customers" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
         <Route path="/customer/:customerId" element={<PrivateRoute><CustomerProfile /></PrivateRoute>} />
         <Route path="/invoice" element={<PrivateRoute><WellVisionInvoice /></PrivateRoute>} />

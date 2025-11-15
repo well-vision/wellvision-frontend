@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import './WellVisionInvoice.css';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const WellVisionInvoice = () => {
+  const formRef = useRef(null);
   const [formData, setFormData] = useState({
     orderNo: '',
     date: new Date().toISOString().slice(0, 10),
@@ -20,11 +21,11 @@ const WellVisionInvoice = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch next Bill No from backend
+  // Fetch preview Bill No from backend (does not increment)
   useEffect(() => {
     const fetchBillNo = async () => {
       try {
-        const res = await fetch('http://localhost:4000/api/invoices/next-bill-no');
+        const res = await fetch('http://localhost:4000/api/invoices/preview-bill-no');
         const data = await res.json();
 
         if (data.success) {
@@ -128,29 +129,25 @@ const WellVisionInvoice = () => {
     />
   );
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const saveInvoice = useCallback(async () => {
     if (!validateForm()) {
       toast.warning('Please fix form errors before submitting.');
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       const response = await fetch('http://localhost:4000/api/invoices/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
       if (response.ok && data.success) {
         toast.success('Invoice saved successfully!');
         setFormData({
           orderNo: '',
           date: new Date().toISOString().slice(0, 10),
-          billNo: '', // New billNo will be fetched
+          billNo: '',
           name: '',
           tel: '',
           address: '',
@@ -160,7 +157,6 @@ const WellVisionInvoice = () => {
           balance: '',
         });
         setErrors({});
-        // Refetch new bill number
         const res = await fetch('http://localhost:4000/api/invoices/next-bill-no');
         const data2 = await res.json();
         if (data2.success) {
@@ -174,10 +170,34 @@ const WellVisionInvoice = () => {
     } finally {
       setIsSubmitting(false);
     }
+  }, [formData]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await saveInvoice();
   };
 
+  // Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+P to print
+  useEffect(() => {
+    const onKeyDown = async (e) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const saveCombo = (isMac && e.metaKey && e.key.toLowerCase() === 's') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 's');
+      const printCombo = (isMac && e.metaKey && e.key.toLowerCase() === 'p') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 'p');
+
+      if (saveCombo) {
+        e.preventDefault();
+        if (!isSubmitting) await saveInvoice();
+      } else if (printCombo) {
+        e.preventDefault();
+        window.print();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [saveInvoice, isSubmitting]);
+
   return (
-    <form className="bill-container" onSubmit={handleSubmit} noValidate>
+    <form ref={formRef} className="bill-container" onSubmit={handleSubmit} noValidate>
       <div className="header">
         <div className="logo-section">
           <img src="/logo.png" alt="Well Vision Logo" className="logo" />
@@ -377,15 +397,9 @@ const WellVisionInvoice = () => {
 
       <div className="galewela">Galewela</div>
 
-      <div style={{ marginTop: 20, textAlign: 'center' }}>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          style={{ padding: '10px 30px', fontSize: 16, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
-        >
-          {isSubmitting ? 'Saving...' : 'Save Invoice'}
-        </button>
-      </div>
+      {/* Action buttons intentionally removed per keyboard shortcuts requirement.
+          Use Ctrl/Cmd+S to Save and Ctrl/Cmd+P to Print. */}
+      <div className="invoice-actions" style={{ display: 'none' }} aria-hidden="true" />
     </form>
   );
 };

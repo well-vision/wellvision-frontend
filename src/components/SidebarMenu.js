@@ -49,7 +49,11 @@ export default function SidebarMenu({ active = 'home' }) {
   const onKeyDown = (e, key) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      navigate(`/${key}`);
+      if (key === 'home') {
+        navigate('/dashboard');
+      } else {
+        navigate(`/${key}`);
+      }
       setIsOpen(false);
     }
   };
@@ -60,7 +64,11 @@ export default function SidebarMenu({ active = 'home' }) {
         key={item.key}
         className={`menu-item ${active === item.key ? 'active' : ''}`}
         onClick={() => {
-          navigate(`/${item.key}`);
+          if (item.key === 'home') {
+            navigate('/dashboard');
+          } else {
+            navigate(`/${item.key}`);
+          }
           setIsOpen(false);
         }}
         role="link"

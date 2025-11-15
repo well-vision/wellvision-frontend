@@ -1,5 +1,5 @@
 // SalesDashboard.js
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './SalesDashboard.css';
 
 const filters = [
@@ -15,15 +15,46 @@ const currencyFormatter = new Intl.NumberFormat('en-LK', {
 });
 
 export default function SalesDashboard({ onNavigate }) {
-  const [salesData] = useState([
-    { id: 1, item: 'Pending glasses', date: 'Aug 2024 12:04', status: 'Pending', amount: 5000, category: 'glasses' },
-    { id: 2, item: 'Lens cleaning kits', date: 'Jul 2024 07:45', status: 'Pending', amount: 2500, category: 'accessories' },
-    { id: 3, item: 'Blue light blocking glasses', date: 'Jul 2024 15:30', status: 'Pending', amount: 8000, category: 'glasses' },
-    { id: 4, item: 'Lens cleaning kits', date: 'Jul 2024 09:15', status: 'Completed', amount: 2500, category: 'accessories' },
-    { id: 5, item: 'Reading glasses', date: 'Jun 2024 14:22', status: 'Completed', amount: 3500, category: 'glasses' },
-    { id: 6, item: 'Lens cleaning kits', date: 'Jun 2024 11:08', status: 'Pending', amount: 2500, category: 'accessories' },
-    { id: 7, item: 'Reading glasses', date: 'May 2024 16:45', status: 'Completed', amount: 3500, category: 'glasses' }
-  ]);
+  const [salesData, setSalesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch orders from backend
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/orders');
+        const data = await response.json();
+
+        if (data.success) {
+          // Transform orders to sales data format
+          const transformedSales = data.data.map((order, index) => ({
+            id: order._id,
+            item: order.items.length > 0 ? order.items[0].description || `Order ${order.orderNumber}` : `Order ${order.orderNumber}`,
+            date: new Date(order.placedAt).toLocaleDateString('en-US', {
+              month: 'short',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            status: order.status === 'Ready for customer' ? 'Completed' : 'Pending',
+            amount: order.total,
+            category: order.items.length > 0 ? (order.items[0].sku.includes('glass') ? 'glasses' : 'accessories') : 'accessories'
+          }));
+          setSalesData(transformedSales);
+        } else {
+          setError('Failed to fetch orders');
+        }
+      } catch (err) {
+        setError('Error fetching orders');
+        console.error('Fetch orders error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,6 +97,22 @@ export default function SalesDashboard({ onNavigate }) {
   const handleSearchChange = e => {
     setSearchTerm(e.target.value);
   };
+
+  if (loading) {
+    return (
+      <div className="main-content" role="main">
+        <div className="loading">Loading sales data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="main-content" role="main">
+        <div className="error">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="main-content" role="main">
