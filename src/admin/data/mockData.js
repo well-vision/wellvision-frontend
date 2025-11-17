@@ -197,41 +197,6 @@ export const mockCustomersData = [
   }
 ];
 
-export const mockGeographyData = [
-  {
-    id: "USA",
-    value: 45
-  },
-  {
-    id: "CAN", 
-    value: 23
-  },
-  {
-    id: "GBR",
-    value: 18
-  },
-  {
-    id: "DEU",
-    value: 15
-  },
-  {
-    id: "AUS",
-    value: 12
-  },
-  {
-    id: "FRA",
-    value: 10
-  },
-  {
-    id: "JPN",
-    value: 8
-  },
-  {
-    id: "IND",
-    value: 6
-  }
-];
-
 export const mockPerformanceData = {
   sales: [
     {
