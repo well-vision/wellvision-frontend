@@ -25,6 +25,7 @@ function Orders() {
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('view'); // 'view', 'edit', or 'add'
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   // Add order form state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -48,10 +49,10 @@ function Orders() {
   const orderStatuses = [
     { value: 'all', label: 'All Statuses' },
     { value: 'Order Received', label: 'Order Received' },
-    { value: 'Order place in Lab', label: 'Order Place in Lab' },
-    { value: 'In lab proccessing', label: 'In Lab Processing' },
-    { value: 'Transit to shop', label: 'Transit to Shop' },
-    { value: 'Ready for customer', label: 'Ready for Customer' }
+    { value: 'Order Placed in Lab', label: 'Order Placed in Lab' },
+    { value: 'In Lab Processing', label: 'In Lab Processing' },
+    { value: 'Transit to Shop', label: 'Transit to Shop' },
+    { value: 'Ready for Customer', label: 'Ready for Customer' }
   ];
 
   // Fetch orders and products from backend
@@ -191,21 +192,34 @@ function Orders() {
   const getStatusBadge = (status) => {
     const badges = {
       'Order Received': { bg: '#DBEAFE', color: '#1E3A8A' },
-      'Order place in Lab': { bg: '#FEF3C7', color: '#92400E' },
-      'In lab proccessing': { bg: '#FFF7ED', color: '#92400E' },
-      'Transit to shop': { bg: '#F3E8FF', color: '#6D28D9' },
-      'Ready for customer': { bg: '#DCFCE7', color: '#166534' }
+      'Order Placed in Lab': { bg: '#FEF3C7', color: '#92400E' },
+      'In Lab Processing': { bg: '#FFF7ED', color: '#92400E' },
+      'Transit to Shop': { bg: '#F3E8FF', color: '#6D28D9' },
+      'Ready for Customer': { bg: '#DCFCE7', color: '#166534' }
     };
     return badges[status] || { bg: '#F1F5F9', color: '#0F172A' };
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
+  };
+
+  // Notification functions
+  const showNotification = (message, type = 'success') => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(notification => notification.id !== id));
+    }, 5000);
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
   };
 
   const handleViewOrder = (order) => {
@@ -234,13 +248,13 @@ function Orders() {
 
         if (data.success) {
           setOrders(orders.filter(o => o._id !== orderId));
-          alert('Order deleted successfully!');
+          showNotification('Order deleted successfully!');
         } else {
-          alert('Failed to delete order: ' + data.message);
+          showNotification('Failed to delete order: ' + data.message, 'error');
         }
       } catch (err) {
         console.error('Delete order error:', err);
-        alert('Error deleting order');
+        showNotification('Error deleting order', 'error');
       }
     }
   };
@@ -266,13 +280,13 @@ function Orders() {
             : o
         ));
         setShowModal(false);
-        alert('Order status updated successfully!');
+        showNotification('Order status updated successfully!');
       } else {
-        alert('Failed to update order status: ' + data.message);
+        showNotification('Failed to update order status: ' + data.message, 'error');
       }
     } catch (err) {
       console.error('Status update error:', err);
-      alert('Error updating order status');
+      showNotification('Error updating order status', 'error');
     }
   };
 
@@ -302,12 +316,12 @@ function Orders() {
     e.preventDefault();
 
     if (!orderForm.orderNumber || !orderForm.customerName) {
-      alert('Order number and customer name are required');
+      showNotification('Order number and customer name are required', 'error');
       return;
     }
 
     if (orderForm.items.length === 0) {
-      alert('Please add at least one item to the order');
+      showNotification('Please add at least one item to the order', 'error');
       return;
     }
 
@@ -350,20 +364,20 @@ function Orders() {
           items: [],
           notes: ''
         });
-        alert('Order created successfully!');
+        showNotification('Order created successfully!');
       } else {
-        alert('Failed to create order: ' + data.message);
+        showNotification('Failed to create order: ' + data.message, 'error');
       }
     } catch (err) {
       console.error('Create order error:', err);
-      alert('Error creating order');
+      showNotification('Error creating order', 'error');
     }
   };
 
   const totalOrders = orders.length;
   const receivedCount = orders.filter(o => o.status === 'Order Received').length;
-  const processingCount = orders.filter(o => o.status === 'In lab proccessing').length;
-  const readyCount = orders.filter(o => o.status === 'Ready for customer').length;
+  const processingCount = orders.filter(o => o.status === 'In Lab Processing').length;
+  const readyCount = orders.filter(o => o.status === 'Ready for Customer').length;
 
   return (
     <div className="orders-page">
