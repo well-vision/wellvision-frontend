@@ -145,10 +145,23 @@
 
     return (
         <div className="user-profile-page">
+        <div className="user-profile-main-content">
         <div className="user-profile-header">
-            <h2>My Profile</h2>
+            <div className="user-profile-header-content">
+            <div className="user-profile-header-title">
+                <h2>My Profile</h2>
+            </div>
+            <div className="user-profile-header-actions">
+                {!isEditing && (
+                    <button className="edit-profile-btn" onClick={onEdit}>
+                        <span>✏️</span> Edit Profile
+                    </button>
+                )}
+            </div>
+            </div>
         </div>
 
+        <div className="user-profile-content-area">
         <div className="user-profile-card">
             <div className="user-profile-image">
             <img src={isEditing ? (form.profilePic || display.profilePic) : display.profilePic} alt="Profile" />
@@ -245,27 +258,15 @@
                     <tr>
                         <td><strong>Role</strong></td>
                         <td>
-                        <select 
-                            name="role" 
-                            value={form.role} 
+                        <select
+                            name="role"
+                            value={form.role}
                             onChange={onChange}
                         >
                             <option value="">Select role</option>
                             <option value="Cashier">Cashier</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Member">Member</option>
+                            <option value="Doctor">Doctor</option>
                         </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Profile Picture URL</strong></td>
-                        <td>
-                        <input
-                            name="profilePic"
-                            value={form.profilePic}
-                            onChange={onChange}
-                            placeholder="Paste image URL or use Change Photo"
-                        />
                         </td>
                     </tr>
                     </tbody>
@@ -282,7 +283,8 @@
             </div>
         </div>
 
-        <p className="user-profile-hint">Tip: Selecting a photo stores it locally. Large images may exceed browser storage limits.</p>
+        </div>
+        </div>
         </div>
     );
     };

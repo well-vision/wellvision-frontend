@@ -12,6 +12,8 @@ import WellVisionInvoice from './components/WellVisionInvoice';
 import ProfilePage from './components/ProfilePage';
 import DailyReports from './components/DailyReports';
 import Products from './components/Products';
+import Bills from './components/Bills';
+import SettingsPage from './components/SettingsPage';
 //import Orders from './components/OrderDashboard';
 
 // Admin components
@@ -56,7 +58,7 @@ export default function DashboardRoutes() {
           <Route path="admin" element={<Admin />} />
           <Route path="staff" element={<Staff />} />
           <Route path="performance" element={<Performance />} />
-          
+
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
       </Routes>
@@ -70,6 +72,8 @@ export default function DashboardRoutes() {
     if (location.pathname.startsWith('/customers')) return 'customers';
     if (location.pathname.startsWith('/customer/')) return 'customers';
     if (location.pathname.startsWith('/invoice')) return 'invoice';
+    if (location.pathname.startsWith('/bills')) return 'bills';
+    if (location.pathname.startsWith('/settings')) return 'settings';
     if (location.pathname.startsWith('/profile')) return 'profile';
     return 'home';
   };
@@ -87,6 +91,12 @@ export default function DashboardRoutes() {
         break;
       case 'invoice':
         navigate('/invoice');
+        break;
+      case 'bills':
+        navigate('/bills');
+        break;
+      case 'settings':
+        navigate('/settings');
         break;
       case 'profile':
         navigate('/profile');
@@ -106,6 +116,8 @@ export default function DashboardRoutes() {
         <Route path="/customers" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
         <Route path="/customer/:customerId" element={<PrivateRoute><CustomerProfile /></PrivateRoute>} />
         <Route path="/invoice" element={<PrivateRoute><WellVisionInvoice /></PrivateRoute>} />
+        <Route path="/bills" element={<PrivateRoute><Bills /></PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
