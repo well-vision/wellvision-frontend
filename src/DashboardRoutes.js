@@ -20,7 +20,6 @@ import AdminDashboard from './admin/scenes/dashboard';
 import AdminProducts from './admin/scenes/products';
 import Customers from './admin/scenes/customers';
 import Transactions from './admin/scenes/transactions';
-import Geography from './admin/scenes/geography';
 import Overview from './admin/scenes/overview';
 import Daily from './admin/scenes/daily';
 import Monthly from './admin/scenes/monthly';
@@ -47,7 +46,6 @@ export default function DashboardRoutes() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="customers" element={<Customers />} />
           <Route path="transactions" element={<Transactions />} />
-          <Route path="geography" element={<Geography />} />
           <Route path="overview" element={<Overview />} />
           <Route path="daily" element={<Daily />} />
           <Route path="daily-reports" element={<DailyReports />} />

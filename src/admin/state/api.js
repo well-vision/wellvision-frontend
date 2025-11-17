@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { mockDashboardData, mockSalesData, mockUserData, mockProductsData, mockTransactionsData, mockCustomersData, mockGeographyData, mockPerformanceData, mockAdminsData, mockStaffData } from "../data/mockData";
+import { mockDashboardData, mockSalesData, mockUserData, mockProductsData, mockTransactionsData, mockCustomersData, mockPerformanceData, mockAdminsData, mockStaffData } from "../data/mockData";
 
 // Custom base query that falls back to mock data
 const baseQueryWithFallback = async (args, api, extraOptions) => {
@@ -53,8 +53,6 @@ const getMockData = (args) => {
     return { data: mockProductsData };
   } else if (endpoint === 'client/customers') {
     return { data: mockCustomersData };
-  } else if (endpoint === 'client/geography') {
-    return { data: mockGeographyData };
   } else if (endpoint === 'client/transactions') {
     return { data: mockTransactionsData };
   } else if (endpoint && endpoint.startsWith('management/performance/')) {
@@ -79,7 +77,6 @@ export const api = createApi({
     "Products",
     "Customers",
     "Transactions",
-    "Geography",
     "Sales",
     "Admins",
     "Staff",
@@ -106,10 +103,6 @@ export const api = createApi({
         params: { page, pageSize, sort, search },
       }),
       providesTags: ["Transactions"],
-    }),
-    getGeography: build.query({
-      query: () => "client/geography",
-      providesTags: ["Geography"],
     }),
     getSales: build.query({
       query: () => "sales/sales",
@@ -174,7 +167,6 @@ export const {
   useGetProductsQuery,
   useGetCustomersQuery,
   useGetTransactionsQuery,
-  useGetGeographyQuery,
   useGetSalesQuery,
   useGetAdminsQuery,
   useGetStaffQuery,
