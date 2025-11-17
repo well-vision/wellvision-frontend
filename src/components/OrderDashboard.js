@@ -28,16 +28,17 @@ function Orders() {
 
   // Add order form state
   const [showAddModal, setShowAddModal] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [orderForm, setOrderForm] = useState({
-    orderNumber: '',
-    customerName: '',
-    customerEmail: '',
-    items: [],
-    notes: ''
+  const [orderForm, setOrderForm] = useState(() => {
+    // Restore form data from localStorage if available
+    const savedForm = localStorage.getItem('orderFormData');
+    return savedForm ? JSON.parse(savedForm) : {
+      orderNumber: '',
+      customerName: '',
+      customerEmail: '',
+      items: [],
+      notes: ''
+    };
   });
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [quantity, setQuantity] = useState(1);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -101,20 +102,7 @@ function Orders() {
       }
     };
 
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('http://localhost:4000/api/products');
-        const data = await response.json();
-        if (data.success) {
-          setProducts(data.products);
-        }
-      } catch (err) {
-        console.error('Error fetching products:', err);
-      }
-    };
-
     fetchOrders();
-    fetchProducts();
 
     // Check if products were selected from the products page
     if (location.state?.selectedProducts) {
@@ -126,15 +114,58 @@ function Orders() {
         unitPrice: item.unitPrice
       }));
 
-      setOrderForm(prev => ({
-        ...prev,
-        items: selectedItems
-      }));
+      // Merge newly selected items into existing ones without creating duplicates.
+      // If the same product is selected again, we just bump its quantity.
+      setOrderForm(prev => {
+        const updatedItems = [...prev.items];
+
+        selectedItems.forEach(newItem => {
+          const existingIndex = updatedItems.findIndex(existingItem => {
+            if (existingItem.productId && newItem.productId) {
+              return existingItem.productId === newItem.productId;
+            }
+            return (
+              existingItem.description === newItem.description &&
+              existingItem.unitPrice === newItem.unitPrice
+            );
+          });
+
+          if (existingIndex !== -1) {
+            const existing = updatedItems[existingIndex];
+            updatedItems[existingIndex] = {
+              ...existing,
+              // Use the latest quantity from the Products selection instead of incrementing
+              // so re-selecting the same product does not double-count the quantity.
+              quantity:
+                typeof newItem.quantity === 'number'
+                  ? newItem.quantity
+                  : existing.quantity || 0
+            };
+          } else {
+            updatedItems.push(newItem);
+          }
+        });
+
+        return {
+          ...prev,
+          items: updatedItems
+        };
+      });
+
+      // Re-open the Add Order modal so the user sees their in-progress form with products.
+      setShowAddModal(true);
 
       // Clear the state to prevent re-populating on refresh
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  // Save form data to localStorage when modal opens
+  useEffect(() => {
+    if (showAddModal) {
+      localStorage.setItem('orderFormData', JSON.stringify(orderForm));
+    }
+  }, [showAddModal, orderForm]);
 
   // Filter orders
   useEffect(() => {
@@ -256,29 +287,6 @@ function Orders() {
   };
 
   // Add order functions
-  const handleAddProduct = () => {
-    if (!selectedProduct || quantity <= 0) return;
-
-    const product = products.find(p => p._id === selectedProduct);
-    if (!product) return;
-
-    const newItem = {
-      productId: selectedProduct,
-      sku: product.sku,
-      description: product.name,
-      quantity: quantity,
-      unitPrice: product.price
-    };
-
-    setOrderForm({
-      ...orderForm,
-      items: [...orderForm.items, newItem]
-    });
-
-    setSelectedProduct('');
-    setQuantity(1);
-  };
-
   const handleRemoveItem = (index) => {
     setOrderForm({
       ...orderForm,
@@ -309,6 +317,7 @@ function Orders() {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...orderForm,
           total: calculateTotal()
@@ -767,54 +776,19 @@ function Orders() {
                 <div className="order-detail-section">
                   <h4>Add Products</h4>
                   <div className="add-product-section">
-                    <div className="form-grid">
-                      <div className="form-group">
-                        <label className="form-label">Product</label>
-                        <select
-                          className="form-select"
-                          value={selectedProduct}
-                          onChange={(e) => setSelectedProduct(e.target.value)}
-                        >
-                          <option value="">Select a product</option>
-                          {products.map(product => (
-                            <option key={product._id} value={product._id}>
-                              {product.name} - Rs. {product.price} (Stock: {product.stock})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">Quantity</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={quantity}
-                          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                          min="1"
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <button
-                          type="button"
-                          className="add-product-btn"
-                          onClick={handleAddProduct}
-                          disabled={!selectedProduct}
-                        >
-                          <Plus size={16} />
-                          Add Product
-                        </button>
-                        <button
-                          type="button"
-                          className="browse-products-btn"
-                          onClick={() => navigate('/products?mode=select')}
-                          title="Browse Products"
-                        >
-                          <ShoppingCart size={16} />
-                          Browse Products
-                        </button>
-                      </div>
+                    <div className="form-group">
+                      <button
+                        type="button"
+                        className="browse-products-btn"
+                        onClick={() => {
+                          // Form data is already saved to localStorage via useEffect
+                          navigate('/products?mode=select');
+                        }}
+                        title="Browse Products"
+                      >
+                        <ShoppingCart size={16} />
+                        Browse Products
+                      </button>
                     </div>
                   </div>
                 </div>
