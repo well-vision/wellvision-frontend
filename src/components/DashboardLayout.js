@@ -5,9 +5,7 @@ import './DashboardLayout.css'; // Adjust path if needed
 const DashboardLayout = ({ children, activePage, onNavigate }) => {
   return (
     <div className="dashboard-layout">
-      <aside className="sidebar">
-        <SidebarMenu active={activePage} onNavigate={onNavigate} />
-      </aside>
+      <SidebarMenu active={activePage} onNavigate={onNavigate} />
       <main className="main-content">
         {children}
       </main>

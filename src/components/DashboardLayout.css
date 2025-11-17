@@ -6,19 +6,8 @@
   overflow: hidden;
 }
 
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 280px; /* Match your sidebar width */
-  height: 100vh;
-  background-color: #1e1e2f;
-  color: white;
-  overflow-y: auto;
-  z-index: 1000;
-}
 
-.main-content {
+.dashboard-layout > .main-content {
   margin-left: 280px; /* Same as sidebar width */
   flex-grow: 1;
   overflow-y: auto;
