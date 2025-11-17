@@ -122,36 +122,6 @@ export default function SalesDashboard({ onNavigate }) {
         <div className="header-content">
           <div className="header-title" aria-label="Sales Dashboard Title">
             <h2>My Sales</h2>
-            <span className="dropdown-icon" aria-hidden="true">▼</span>
-          </div>
-          <div className="header-actions">
-            <div className="search-container">
-              <input
-                type="search"
-                placeholder="Search sales..."
-                className="search-input"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                aria-label="Search sales"
-              />
-              <span className="search-icon" aria-hidden="true">🔍</span>
-            </div>
-            <button
-              className="header-btn"
-              type="button"
-              aria-label="Download sales data"
-              title="Download sales data"
-            >
-              ⬇️
-            </button>
-            <button
-              className="add-new-btn"
-              type="button"
-              aria-label="Add new sale"
-              title="Add new sale"
-            >
-              Add new
-            </button>
           </div>
         </div>
       </div>

@@ -278,12 +278,6 @@ export default function CustomerDashboard() {
         <div className="header-content">
           <div className="header-title">
             <h2>Customers</h2>
-            <span className="dropdown-icon">▼</span>
-          </div>
-          <div className="header-actions">
-            <button className="header-btn">🔍</button>
-            <button className="header-btn">⬇️</button>
-            <button className="add-new-btn" onClick={resetForm}>Add new</button>
           </div>
         </div>
       </div>
