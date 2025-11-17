@@ -147,9 +147,6 @@
         <div className="user-profile-page">
         <div className="user-profile-header">
             <h2>My Profile</h2>
-            {!isEditing && (
-            <button className="user-profile-edit-btn" onClick={onEdit}>Edit Profile</button>
-            )}
         </div>
 
         <div className="user-profile-card">
