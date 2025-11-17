@@ -3,7 +3,7 @@ import './WellVisionInvoice.css';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const WellVisionInvoice = () => {
+const WellVisionInvoice = ({ customer }) => {
   const formRef = useRef(null);
   const [formData, setFormData] = useState({
     orderNo: '',
@@ -129,48 +129,69 @@ const WellVisionInvoice = () => {
     />
   );
 
-  const saveInvoice = useCallback(async () => {
-    if (!validateForm()) {
-      toast.warning('Please fix form errors before submitting.');
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('http://localhost:4000/api/invoices/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
-        toast.success('Invoice saved successfully!');
-        setFormData({
-          orderNo: '',
-          date: new Date().toISOString().slice(0, 10),
-          billNo: '',
-          name: '',
-          tel: '',
-          address: '',
-          items: Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
-          amount: '',
-          advance: '',
-          balance: '',
-        });
-        setErrors({});
-        const res = await fetch('http://localhost:4000/api/invoices/next-bill-no');
-        const data2 = await res.json();
-        if (data2.success) {
-          setFormData(prev => ({ ...prev, billNo: data2.nextBillNo }));
-        }
-      } else {
-        toast.error('Failed to save invoice: ' + (data.message || 'Unknown error'));
+  const saveInvoice = useCallback(
+    async (options = { resetAfterSave: true }) => {
+      const { resetAfterSave } = options;
+
+      if (!validateForm()) {
+        toast.warning('Please fix form errors before submitting.');
+        return { success: false };
       }
-    } catch (error) {
-      toast.error('Error saving invoice: ' + error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [formData]);
+      setIsSubmitting(true);
+      try {
+        const payload = { ...formData };
+        if (customer && customer._id) {
+          payload.customerId = customer._id;
+        }
+
+        const response = await fetch('http://localhost:4000/api/invoices/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          toast.success('Invoice saved successfully!');
+
+          if (resetAfterSave) {
+            setFormData({
+              orderNo: '',
+              date: new Date().toISOString().slice(0, 10),
+              billNo: '',
+              name: '',
+              tel: '',
+              address: '',
+              items: Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
+              amount: '',
+              advance: '',
+              balance: '',
+            });
+            setErrors({});
+
+            const res = await fetch('http://localhost:4000/api/invoices/next-bill-no', {
+              credentials: 'include',
+            });
+            const data2 = await res.json();
+            if (data2.success) {
+              setFormData(prev => ({ ...prev, billNo: data2.nextBillNo }));
+            }
+          }
+
+          return { success: true, invoice: data.invoice };
+        } else {
+          toast.error('Failed to save invoice: ' + (data.message || 'Unknown error'));
+          return { success: false };
+        }
+      } catch (error) {
+        toast.error('Error saving invoice: ' + error.message);
+        return { success: false };
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [formData, customer]
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -181,20 +202,38 @@ const WellVisionInvoice = () => {
   useEffect(() => {
     const onKeyDown = async (e) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const saveCombo = (isMac && e.metaKey && e.key.toLowerCase() === 's') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 's');
-      const printCombo = (isMac && e.metaKey && e.key.toLowerCase() === 'p') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 'p');
+      const saveCombo =
+        (isMac && e.metaKey && e.key.toLowerCase() === 's') ||
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === 's');
+      const printCombo =
+        (isMac && e.metaKey && e.key.toLowerCase() === 'p') ||
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === 'p');
 
       if (saveCombo) {
         e.preventDefault();
         if (!isSubmitting) await saveInvoice();
       } else if (printCombo) {
         e.preventDefault();
-        window.print();
+        if (!isSubmitting) {
+          const result = await saveInvoice({ resetAfterSave: false });
+          if (result && result.success) {
+            window.print();
+          }
+        }
       }
     };
+
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [saveInvoice, isSubmitting]);
+
+  const handlePrint = async () => {
+    if (isSubmitting) return;
+    const result = await saveInvoice({ resetAfterSave: false });
+    if (result && result.success) {
+      window.print();
+    }
+  };
 
   return (
     <form ref={formRef} className="bill-container" onSubmit={handleSubmit} noValidate>
@@ -398,10 +437,19 @@ const WellVisionInvoice = () => {
       <div className="galewela">Galewela</div>
 
       <div className="invoice-actions">
-        <button className="save-button" type="button" onClick={saveInvoice} disabled={isSubmitting}>
+        <button
+          className="save-button"
+          type="button"
+          onClick={() => saveInvoice()}
+          disabled={isSubmitting}
+        >
           {isSubmitting ? 'Saving...' : 'Save'}
         </button>
-        <button className="print-button" type="button" onClick={() => window.print()}>
+        <button
+          className="print-button"
+          type="button"
+          onClick={handlePrint}
+        >
           Print
         </button>
       </div>

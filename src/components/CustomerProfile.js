@@ -18,6 +18,8 @@ const CustomerProfile = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [invoices, setInvoices] = useState([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
@@ -51,6 +53,33 @@ const CustomerProfile = () => {
     };
 
     fetchCustomer();
+  }, [customerId]);
+
+  // Fetch invoices for this customer to show under the Billing tab
+  useEffect(() => {
+    if (!customerId) return;
+
+    const fetchInvoices = async () => {
+      setInvoicesLoading(true);
+      try {
+        const res = await fetch(`http://localhost:4000/api/invoices?customerId=${customerId}`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Failed to fetch invoices');
+        }
+
+        setInvoices(data.invoices || []);
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setInvoicesLoading(false);
+      }
+    };
+
+    fetchInvoices();
   }, [customerId]);
 
   if (loading) return <div className="loading-message">Loading customer profile...</div>;
@@ -239,6 +268,40 @@ const CustomerProfile = () => {
           {activeTab === 'Billing' && (
             <div className="profile-billing-tab">
               <WellVisionInvoice customer={customer} />
+
+              <div className="profile-invoices-section">
+                <h4>Invoices</h4>
+                {invoicesLoading ? (
+                  <p>Loading invoices...</p>
+                ) : invoices.length === 0 ? (
+                  <p>No invoices found for this customer yet.</p>
+                ) : (
+                  <table className="profile-invoices-table">
+                    <thead>
+                      <tr>
+                        <th>Bill No</th>
+                        <th>Order No</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Advance</th>
+                        <th>Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoices.map((inv) => (
+                        <tr key={inv._id}>
+                          <td>{inv.billNo}</td>
+                          <td>{inv.orderNo}</td>
+                          <td>{inv.date ? new Date(inv.date).toLocaleDateString() : ''}</td>
+                          <td>{inv.amount}</td>
+                          <td>{inv.advance}</td>
+                          <td>{inv.balance}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           )}
         </>
