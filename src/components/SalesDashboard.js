@@ -29,23 +29,36 @@ export default function SalesDashboard({ onNavigate }) {
         const data = await response.json();
 
         if (data.success) {
-          // Transform orders to sales data format
-          const transformedSales = data.data.map((order, index) => ({
-            id: order._id,
-            item: order.items.length > 0 ? order.items[0].description || `Order ${order.orderNumber}` : `Order ${order.orderNumber}`,
-            date: new Date(order.placedAt).toLocaleDateString('en-US', {
-              month: 'short',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            }),
-            status: order.status === 'Ready for customer' ? 'Completed' : 'Pending',
-            amount: order.total,
-            category: order.items.length > 0 ? (order.items[0].sku.includes('glass') ? 'glasses' : 'accessories') : 'accessories'
-          }));
+          // Transform orders to sales data format (defensive against missing sku/description)
+          const transformedSales = data.data.map((order) => {
+            const firstItem = order.items && order.items.length > 0 ? order.items[0] : {};
+
+            const itemDescription =
+              firstItem.description ||
+              firstItem.sku ||
+              `Order ${order.orderNumber}`;
+
+            const sku =
+              typeof firstItem.sku === 'string' ? firstItem.sku.toLowerCase() : '';
+
+            return {
+              id: order._id,
+              item: itemDescription,
+              date: new Date(order.placedAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              }),
+              status: order.status === 'Ready for customer' ? 'Completed' : 'Pending',
+              amount: order.total,
+              category: sku.includes('glass') ? 'glasses' : 'accessories'
+            };
+          });
           setSalesData(transformedSales);
         } else {
-          setError('Failed to fetch orders');
+          // Show backend-provided message when available
+          setError(data.message || 'Failed to fetch orders');
         }
       } catch (err) {
         setError('Error fetching orders');
