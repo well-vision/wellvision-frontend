@@ -1,9 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import './WellVisionInvoice.css';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const WellVisionInvoice = ({ customer }) => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const mode = searchParams.get('view') ? 'view' : searchParams.get('edit') ? 'edit' : 'create';
+  const invoiceId = searchParams.get('view') || searchParams.get('edit');
+  const customerId = searchParams.get('customerId');
   const formRef = useRef(null);
   const [formData, setFormData] = useState({
     orderNo: '',
@@ -21,38 +27,76 @@ const WellVisionInvoice = ({ customer }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch preview Bill No and Order No from backend (does not increment counters)
+  // Fetch invoice data if in view or edit mode
   useEffect(() => {
-    const fetchNumbers = async () => {
-      try {
-        // Bill number preview
-        const billRes = await fetch('http://localhost:4000/api/invoices/preview-bill-no');
-        const billData = await billRes.json();
+    if (mode === 'create') {
+      const fetchNumbers = async () => {
+        try {
+          // Bill number preview
+          const billRes = await fetch('http://localhost:4000/api/invoices/preview-bill-no');
+          const billData = await billRes.json();
 
-        // Order number preview
-        const orderRes = await fetch('http://localhost:4000/api/orders/preview-order-no');
-        const orderData = await orderRes.json();
+          // Order number preview
+          const orderRes = await fetch('http://localhost:4000/api/orders/preview-order-no');
+          const orderData = await orderRes.json();
 
-        setFormData(prev => ({
-          ...prev,
-          billNo: billData.success ? billData.nextBillNo : prev.billNo,
-          orderNo: orderData.success ? orderData.nextOrderNumber : prev.orderNo,
-        }));
+          setFormData(prev => ({
+            ...prev,
+            billNo: billData.success ? billData.nextBillNo : prev.billNo,
+            orderNo: orderData.success ? orderData.nextOrderNumber : prev.orderNo,
+          }));
 
-        if (!billData.success) {
-          toast.error(billData.message || 'Failed to load Bill No');
+          if (!billData.success) {
+            toast.error(billData.message || 'Failed to load Bill No');
+          }
+          if (!orderData.success) {
+            toast.error(orderData.message || 'Failed to load Order No');
+          }
+        } catch (err) {
+          toast.error('Error fetching invoice/order numbers');
+          console.error(err);
         }
-        if (!orderData.success) {
-          toast.error(orderData.message || 'Failed to load Order No');
-        }
-      } catch (err) {
-        toast.error('Error fetching invoice/order numbers');
-        console.error(err);
-      }
-    };
+      };
 
-    fetchNumbers();
-  }, []);
+      fetchNumbers();
+    } else if (invoiceId) {
+      const fetchInvoice = async () => {
+        try {
+          const response = await fetch(`http://localhost:4000/api/invoices/${invoiceId}`, {
+            credentials: 'include',
+          });
+          const data = await response.json();
+          if (data.success) {
+            const invoice = data.invoice;
+            setFormData({
+              orderNo: invoice.orderNo || '',
+              date: invoice.date ? new Date(invoice.date).toISOString().slice(0, 10) : '',
+              billNo: invoice.billNo || '',
+              name: invoice.name || '',
+              tel: invoice.tel || '',
+              address: invoice.address || '',
+              items: invoice.items && invoice.items.length > 0 ? invoice.items.map(item => ({
+                item: item.item || '',
+                description: item.description || '',
+                rs: item.rs || '',
+                cts: item.cts || '',
+              })) : Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
+              amount: invoice.amount || '',
+              advance: invoice.advance || '',
+              balance: invoice.balance || '',
+            });
+          } else {
+            toast.error('Failed to load invoice');
+          }
+        } catch (error) {
+          toast.error('Error loading invoice');
+          console.error(error);
+        }
+      };
+
+      fetchInvoice();
+    }
+  }, [mode, invoiceId]);
 
   // Auto-fill invoice header when a customer is provided (Customer Profile Billing)
   useEffect(() => {
@@ -133,7 +177,8 @@ const WellVisionInvoice = ({ customer }) => {
       type={type}
       name={name}
       value={value}
-      onChange={onChange}
+      onChange={mode === 'view' ? undefined : onChange}
+      readOnly={mode === 'view'}
       style={{
         border: 'none',
         borderBottom: error ? '2px solid red' : '1px dotted black',
@@ -153,6 +198,8 @@ const WellVisionInvoice = ({ customer }) => {
     async (options = { resetAfterSave: true }) => {
       const { resetAfterSave } = options;
 
+      if (mode === 'view') return { success: true };
+
       if (!validateForm()) {
         toast.warning('Please fix form errors before submitting.');
         return { success: false };
@@ -165,8 +212,10 @@ const WellVisionInvoice = ({ customer }) => {
         }
 
         console.log('Sending payload:', JSON.stringify(payload, null, 2));
-        const response = await fetch('http://localhost:4000/api/invoices/create', {
-          method: 'POST',
+        const url = mode === 'edit' && invoiceId ? `http://localhost:4000/api/invoices/${invoiceId}` : 'http://localhost:4000/api/invoices/create';
+        const method = mode === 'edit' ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+          method,
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(payload),
@@ -175,9 +224,9 @@ const WellVisionInvoice = ({ customer }) => {
         const data = await response.json();
         console.log('Response data:', JSON.stringify(data, null, 2));
         if (response.ok && data.success) {
-          toast.success('Invoice saved successfully!');
+          toast.success(`Invoice ${mode === 'edit' ? 'updated' : 'saved'} successfully!`);
 
-          if (resetAfterSave) {
+          if (resetAfterSave && mode === 'create') {
             setFormData({
               orderNo: '',
               date: new Date().toISOString().slice(0, 10),
@@ -199,21 +248,32 @@ const WellVisionInvoice = ({ customer }) => {
             if (data2.success) {
               setFormData(prev => ({ ...prev, billNo: data2.nextBillNo }));
             }
+          } else if (mode === 'edit') {
+            // Navigate back to bills page after successful update
+            setTimeout(() => {
+              if (customerId) {
+                navigate(`/customer/${customerId}?tab=Bills`);
+              } else if (customer) {
+                navigate(-1);
+              } else {
+                navigate('/bills');
+              }
+            }, 2000); // 2 second delay to show the success message
           }
 
           return { success: true, invoice: data.invoice };
         } else {
-          toast.error('Failed to save invoice: ' + (data.message || 'Unknown error'));
+          toast.error(`Failed to ${mode === 'edit' ? 'update' : 'save'} invoice: ` + (data.message || 'Unknown error'));
           return { success: false };
         }
       } catch (error) {
-        toast.error('Error saving invoice: ' + error.message);
+        toast.error(`Error ${mode === 'edit' ? 'updating' : 'saving'} invoice: ` + error.message);
         return { success: false };
       } finally {
         setIsSubmitting(false);
       }
     },
-    [formData, customer, validateForm]
+    [formData, customer, validateForm, mode, invoiceId]
   );
 
   const handleSubmit = async (e) => {
@@ -221,7 +281,7 @@ const WellVisionInvoice = ({ customer }) => {
     await saveInvoice();
   };
 
-  // Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+P to print
+  // Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+P to print, Ctrl/Cmd+Z to go back
   useEffect(() => {
     const onKeyDown = async (e) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -231,6 +291,9 @@ const WellVisionInvoice = ({ customer }) => {
       const printCombo =
         (isMac && e.metaKey && e.key.toLowerCase() === 'p') ||
         (!isMac && e.ctrlKey && e.key.toLowerCase() === 'p');
+      const backCombo =
+        (isMac && e.metaKey && e.key.toLowerCase() === 'z') ||
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === 'z');
 
       if (saveCombo) {
         e.preventDefault();
@@ -243,12 +306,21 @@ const WellVisionInvoice = ({ customer }) => {
             window.print();
           }
         }
+      } else if (backCombo) {
+        e.preventDefault();
+        if (customerId) {
+          navigate(`/customer/${customerId}?tab=Bills`);
+        } else if (customer) {
+          navigate(-1);
+        } else {
+          navigate('/bills');
+        }
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [saveInvoice, isSubmitting]);
+  }, [saveInvoice, isSubmitting, navigate]);
 
   const handlePrint = async () => {
     if (isSubmitting) return;
@@ -460,14 +532,16 @@ const WellVisionInvoice = ({ customer }) => {
       <div className="galewela">Galewela</div>
 
       <div className="invoice-actions">
-        <button
-          className="save-button"
-          type="button"
-          onClick={() => saveInvoice()}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Saving...' : 'Save'}
-        </button>
+        {mode !== 'view' && (
+          <button
+            className="save-button"
+            type="button"
+            onClick={() => saveInvoice()}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Update' : 'Save'}
+          </button>
+        )}
         <button
           className="print-button"
           type="button"
@@ -475,6 +549,23 @@ const WellVisionInvoice = ({ customer }) => {
         >
           Print
         </button>
+        {mode === 'view' && (
+          <button
+            className="back-button"
+            type="button"
+            onClick={() => {
+              if (customerId) {
+                navigate(`/customer/${customerId}?tab=Bills`);
+              } else if (customer) {
+                navigate(-1);
+              } else {
+                navigate('/bills');
+              }
+            }}
+          >
+            Back
+          </button>
+        )}
       </div>
     </form>
   );

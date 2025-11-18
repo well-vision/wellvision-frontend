@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronDown, Plus, ChevronRight } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { Plus, ChevronRight } from 'lucide-react';
 import WellVisionInvoice from './WellVisionInvoice';
 import './CustomerProfile.css';
 import { toast } from 'react-toastify';
@@ -8,9 +8,11 @@ import { toast } from 'react-toastify';
 const CustomerProfile = () => {
   const { customerId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [customer, setCustomer] = useState(null);
   const [prescriptions, setPrescriptions] = useState([]);
-  const [activeTab, setActiveTab] = useState('Personal Details');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Personal Details');
+  const tabs = ['Personal Details', 'Prescriptions', 'Job Card', 'Billing', 'Bills'];
   const [expandedSections, setExpandedSections] = useState({
     customerDetails: true,
     prescription: true,
@@ -86,7 +88,7 @@ const CustomerProfile = () => {
   if (!customer) return <div className="error-message">Customer not found.</div>;
 
   const renderSection = (title, isOpen, toggleKey, children) => (
-    <section className="profile-card" aria-expanded={isOpen}>
+    <section className="profile-card">
       <div
         className="profile-card-header"
         role="button"
@@ -109,16 +111,10 @@ const CustomerProfile = () => {
       <header className="profile-header">
         <div className="profile-header-left">
           <h2>
-            Customers <ChevronDown size={16} />
+            Customers
           </h2>
         </div>
         <div className="profile-header-right">
-          <button className="profile-icon-btn" title="Refresh" onClick={() => window.location.reload()}>
-            ⟳
-          </button>
-          <button className="profile-icon-btn" title="Notifications">
-            🔔 <span className="profile-notification-badge">24</span>
-          </button>
           <button
             className="profile-add-new-btn"
             onClick={() => navigate('/customers')}
@@ -142,11 +138,14 @@ const CustomerProfile = () => {
       {renderSection('Customer Details', expandedSections.customerDetails, 'customerDetails', (
         <>
           <div className="profile-tabs">
-            {['Personal Details', 'Job Card', 'Billing', 'xxxxxx', 'xxxxxx'].map((tab) => (
+            {tabs.map((tab) => (
               <button
                 key={tab}
                 className={`profile-tab-btn ${activeTab === tab ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  navigate(`/customer/${customerId}?tab=${encodeURIComponent(tab)}`, { replace: true });
+                }}
               >
                 {tab}
               </button>
@@ -265,74 +264,105 @@ const CustomerProfile = () => {
             </>
           )}
 
+          {activeTab === 'Prescriptions' && (
+            <table className="profile-prescription-table">
+              <thead>
+                <tr>
+                  <th>Prescription</th>
+                  <th>Description</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>View</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prescriptions.map((prescription) => (
+                  <tr key={prescription.id}>
+                    <td>{prescription.name}</td>
+                    <td>{prescription.description}</td>
+                    <td>{prescription.date}</td>
+                    <td>{prescription.time}</td>
+                    <td>
+                      <button className="profile-view-btn">View</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {activeTab === 'Job Card' && (
+            <div className="profile-job-card-tab">
+              <p>Job Card content will be displayed here.</p>
+            </div>
+          )}
+
           {activeTab === 'Billing' && (
             <div className="profile-billing-tab">
               <WellVisionInvoice customer={customer} />
+            </div>
+          )}
 
-              <div className="profile-invoices-section">
-                <h4>Invoices</h4>
-                {invoicesLoading ? (
-                  <p>Loading invoices...</p>
-                ) : invoices.length === 0 ? (
-                  <p>No invoices found for this customer yet.</p>
-                ) : (
-                  <table className="profile-invoices-table">
-                    <thead>
-                      <tr>
-                        <th>Bill No</th>
-                        <th>Order No</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Advance</th>
-                        <th>Balance</th>
+          {activeTab === 'Bills' && (
+            <div className="profile-bills-tab">
+              <h4>Customer Invoices</h4>
+              {invoicesLoading ? (
+                <p>Loading invoices...</p>
+              ) : invoices.length === 0 ? (
+                <p>No invoices found for this customer yet.</p>
+              ) : (
+                <table className="profile-invoices-table">
+                  <thead>
+                    <tr>
+                      <th>Bill No</th>
+                      <th>Order No</th>
+                      <th>Date</th>
+                      <th>Items</th>
+                      <th>Amount</th>
+                      <th>Advance</th>
+                      <th>Balance</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoices.map((inv) => (
+                      <tr key={inv._id}>
+                        <td>{inv.billNo}</td>
+                        <td>{inv.orderNo}</td>
+                        <td>{inv.date ? new Date(inv.date).toLocaleString() : ''}</td>
+                        <td>{inv.items && inv.items.length > 0 ? inv.items.map(item => item.item).join(', ') : 'N/A'}</td>
+                        <td>{inv.amount}</td>
+                        <td>{inv.advance}</td>
+                        <td>{inv.balance}</td>
+                        <td>
+                          <div className="action-buttons">
+                            <button
+                              className="action-btn view-btn"
+                              onClick={() => navigate(`/invoice?view=${inv._id}&customerId=${customerId}`)}
+                              title="View Invoice"
+                            >
+                              View
+                            </button>
+                            <button
+                              className="action-btn edit-btn"
+                              onClick={() => navigate(`/invoice?edit=${inv._id}&customerId=${customerId}`)}
+                              title="Edit Invoice"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {invoices.map((inv) => (
-                        <tr key={inv._id}>
-                          <td>{inv.billNo}</td>
-                          <td>{inv.orderNo}</td>
-                          <td>{inv.date ? new Date(inv.date).toLocaleDateString() : ''}</td>
-                          <td>{inv.amount}</td>
-                          <td>{inv.advance}</td>
-                          <td>{inv.balance}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
         </>
       ))}
 
-      {renderSection('Prescription', expandedSections.prescription, 'prescription', (
-        <table className="profile-prescription-table">
-          <thead>
-            <tr>
-              <th>Prescription</th>
-              <th>Description</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>View</th>
-            </tr>
-          </thead>
-          <tbody>
-            {prescriptions.map((prescription) => (
-              <tr key={prescription.id}>
-                <td>{prescription.name}</td>
-                <td>{prescription.description}</td>
-                <td>{prescription.date}</td>
-                <td>{prescription.time}</td>
-                <td>
-                  <button className="profile-view-btn">View</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ))}
+
     </div>
   );
 };

@@ -6,7 +6,7 @@ import {
   Download,
   Eye,
   Edit2,
-  Trash2,
+
   Filter,
   SortAsc,
   SortDesc,
@@ -269,10 +269,6 @@ function Bills() {
         {selectedBills.length > 0 && (
           <div className="bulk-actions">
             <span>{selectedBills.length} selected</span>
-            <button className="bulk-delete-btn" onClick={handleBulkDelete}>
-              <Trash2 size={14} />
-              Delete Selected
-            </button>
           </div>
         )}
 
@@ -338,7 +334,7 @@ function Bills() {
                     </td>
                     <td className="bill-no">{bill.billNo}</td>
                     <td>{bill.orderNo}</td>
-                    <td>{new Date(bill.date).toLocaleDateString()}</td>
+                    <td>{new Date(bill.date).toLocaleString()}</td>
                     <td>{bill.name}</td>
                     <td>{bill.tel}</td>
                     <td className="amount">{formatCurrency(bill.amount)}</td>
@@ -348,24 +344,17 @@ function Bills() {
                       <div className="action-buttons">
                         <button
                           className="action-btn view-btn"
-                          onClick={() => navigate(`/bills/${bill._id}`)}
-                          title="View Bill"
+                          onClick={() => navigate(`/invoice?view=${bill._id}`)}
+                          title="View Invoice"
                         >
                           <Eye size={14} />
                         </button>
                         <button
                           className="action-btn edit-btn"
                           onClick={() => navigate(`/invoice?edit=${bill._id}`)}
-                          title="Edit Bill"
+                          title="Edit Invoice"
                         >
                           <Edit2 size={14} />
-                        </button>
-                        <button
-                          className="action-btn delete-btn"
-                          onClick={() => handleDeleteBill(bill._id)}
-                          title="Delete Bill"
-                        >
-                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
