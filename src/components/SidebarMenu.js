@@ -13,7 +13,8 @@ import {
   Logs,
   ChevronDown,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -76,15 +77,16 @@ export default function SidebarMenu({ active = 'home' }) {
       path: '/bills',
       description: 'Payment Tracking'
     },
-    { 
-      label: 'Orders', 
-      icon: <Logs />, 
+    {
+      label: 'Orders',
+      icon: <Logs />,
       key: 'orders',
       path: '/orders',
       description: 'Order Processing',
       badge: notifications.orders > 0 ? notifications.orders : null,
       badgeType: 'info'
-    }
+    },
+
   ];
 
   const generalItems = [

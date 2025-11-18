@@ -52,7 +52,8 @@ function Orders() {
     { value: 'Order Placed in Lab', label: 'Order Placed in Lab' },
     { value: 'In Lab Processing', label: 'In Lab Processing' },
     { value: 'Transit to Shop', label: 'Transit to Shop' },
-    { value: 'Ready for Customer', label: 'Ready for Customer' }
+    { value: 'Ready for Customer', label: 'Ready for Customer' },
+    { value: 'Customer Collected', label: 'Customer Collected' }
   ];
 
   // Notification functions
@@ -231,7 +232,8 @@ function Orders() {
       'Order Placed in Lab': { bg: '#FEF3C7', color: '#92400E' },
       'In Lab Processing': { bg: '#FFF7ED', color: '#92400E' },
       'Transit to Shop': { bg: '#F3E8FF', color: '#6D28D9' },
-      'Ready for Customer': { bg: '#DCFCE7', color: '#166534' }
+      'Ready for Customer': { bg: '#DCFCE7', color: '#166534' },
+      'Customer Collected': { bg: '#E0F2FE', color: '#0C4A6E' }
     };
     return badges[status] || { bg: '#F1F5F9', color: '#0F172A' };
   };
@@ -257,30 +259,9 @@ function Orders() {
     setShowModal(true);
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (window.confirm('Are you sure you want to delete this order?')) {
-      try {
-        const response = await fetch(`http://localhost:4000/api/orders/${orderId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include'
-        });
-        const data = await response.json();
 
-        if (data.success) {
-          setOrders(orders.filter(o => o._id !== orderId));
-          showNotification('Order deleted successfully!');
-        } else {
-          showNotification('Failed to delete order: ' + data.message, 'error');
-        }
-      } catch (err) {
-        console.error('Delete order error:', err);
-        showNotification('Error deleting order', 'error');
-      }
-    }
-  };
+
+
 
   const handleStatusUpdate = async (e) => {
     e.preventDefault();
@@ -524,11 +505,11 @@ function Orders() {
                           Rs. {order.total.toLocaleString()}
                         </td>
                         <td>
-                          <span 
+                          <span
                             className="status-badge"
-                            style={{ 
-                              backgroundColor: statusStyle.bg, 
-                              color: statusStyle.color 
+                            style={{
+                              backgroundColor: statusStyle.bg,
+                              color: statusStyle.color
                             }}
                           >
                             {order.status}
@@ -543,20 +524,15 @@ function Orders() {
                             >
                               <Eye size={14} />
                             </button>
-                            <button
-                              className="table-action-btn edit-action-btn"
-                              onClick={() => handleEditStatus(order)}
-                              title="Update Status"
-                            >
-                              <Edit2 size={14} />
-                            </button>
-                            <button
-                              className="table-action-btn delete-action-btn"
-                              onClick={() => handleDeleteOrder(order._id)}
-                              title="Delete Order"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            {order.status !== 'Customer Collected' && (
+                              <button
+                                className="table-action-btn edit-action-btn"
+                                onClick={() => handleEditStatus(order)}
+                                title="Update Status"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -723,20 +699,24 @@ function Orders() {
                 >
                   Close
                 </button>
-                <button
-                  type="button"
-                  className="modal-btn modal-btn-secondary"
-                  onClick={() => navigate(`/invoice?orderNo=${selectedOrder.orderNumber}&customerName=${selectedOrder.customerName}&customerEmail=${selectedOrder.notes || ''}`)}
-                >
-                  Create Invoice
-                </button>
-                <button
-                  type="button"
-                  className="modal-btn modal-btn-submit"
-                  onClick={() => setModalMode('edit')}
-                >
-                  Update Status
-                </button>
+                {selectedOrder.status !== 'Customer Collected' && (
+                  <>
+                    <button
+                      type="button"
+                      className="modal-btn modal-btn-secondary"
+                      onClick={() => navigate(`/invoice?orderNo=${selectedOrder.orderNumber}&customerName=${selectedOrder.customerName}&customerEmail=${selectedOrder.notes || ''}`)}
+                    >
+                      Create Invoice
+                    </button>
+                    <button
+                      type="button"
+                      className="modal-btn modal-btn-submit"
+                      onClick={() => setModalMode('edit')}
+                    >
+                      Update Status
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

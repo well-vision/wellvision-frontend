@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import './DailyReports.css';
 import SidebarMenu from '../components/SidebarMenu';
 import {
@@ -20,45 +20,81 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 function DailyReports() {
-  const [startDate, setStartDate] = useState(new Date("2024-09-01"));
-  const [endDate, setEndDate] = useState(new Date("2024-09-18"));
+  // Set default date range to current month
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  const [startDate, setStartDate] = useState(currentMonthStart);
+  const [endDate, setEndDate] = useState(currentMonthEnd);
   const [view, setView] = useState("sales");
 
-  // Sample data for demonstration
-  const sampleData = [
-    { date: "2024-09-01", totalSales: 120, totalUnits: 60, totalInvoices: 12, revenue: 12000 },
-    { date: "2024-09-02", totalSales: 150, totalUnits: 75, totalInvoices: 15, revenue: 15000 },
-    { date: "2024-09-03", totalSales: 180, totalUnits: 90, totalInvoices: 18, revenue: 18000 },
-    { date: "2024-09-04", totalSales: 200, totalUnits: 100, totalInvoices: 20, revenue: 20000 },
-    { date: "2024-09-05", totalSales: 220, totalUnits: 110, totalInvoices: 22, revenue: 22000 },
-    { date: "2024-09-06", totalSales: 190, totalUnits: 95, totalInvoices: 19, revenue: 19000 },
-    { date: "2024-09-07", totalSales: 210, totalUnits: 105, totalInvoices: 21, revenue: 21000 },
-    { date: "2024-09-08", totalSales: 230, totalUnits: 115, totalInvoices: 23, revenue: 23000 },
-    { date: "2024-09-09", totalSales: 250, totalUnits: 125, totalInvoices: 25, revenue: 25000 },
-    { date: "2024-09-10", totalSales: 270, totalUnits: 135, totalInvoices: 27, revenue: 27000 },
-    { date: "2024-09-11", totalSales: 240, totalUnits: 120, totalInvoices: 24, revenue: 24000 },
-    { date: "2024-09-12", totalSales: 260, totalUnits: 130, totalInvoices: 26, revenue: 26000 },
-    { date: "2024-09-13", totalSales: 280, totalUnits: 140, totalInvoices: 28, revenue: 28000 },
-    { date: "2024-09-14", totalSales: 300, totalUnits: 150, totalInvoices: 30, revenue: 30000 },
-    { date: "2024-09-15", totalSales: 320, totalUnits: 160, totalInvoices: 32, revenue: 32000 },
-    { date: "2024-09-16", totalSales: 290, totalUnits: 145, totalInvoices: 29, revenue: 29000 },
-    { date: "2024-09-17", totalSales: 310, totalUnits: 155, totalInvoices: 31, revenue: 31000 },
-    { date: "2024-09-18", totalSales: 330, totalUnits: 165, totalInvoices: 33, revenue: 33000 },
-  ];
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch orders from backend
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:4000/api/orders', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setOrders(data.data);
+        } else {
+          setError(data.message || 'Failed to fetch orders');
+        }
+      } catch (err) {
+        setError('Error fetching orders');
+        console.error('Fetch orders error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  // Group orders by date and calculate daily metrics
+  const dailyData = useMemo(() => {
+    const grouped = orders.reduce((acc, order) => {
+      const dateKey = new Date(order.placedAt).toISOString().split('T')[0]; // YYYY-MM-DD format
+      if (!acc[dateKey]) {
+        acc[dateKey] = {
+          date: dateKey,
+          totalSales: 0,
+          totalUnits: 0,
+          totalOrders: 0,
+          revenue: 0
+        };
+      }
+      acc[dateKey].totalSales += 1; // Each order is a sale
+      acc[dateKey].totalUnits += order.items.reduce((sum, item) => sum + (item.quantity || 0), 0); // Sum quantities for units
+      acc[dateKey].totalOrders += 1;
+      acc[dateKey].revenue += order.total;
+      return acc;
+    }, {});
+
+    return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [orders]);
 
   // Filter data based on date range
   const filteredData = useMemo(() => {
-    return sampleData.filter((item) => {
+    return dailyData.filter((item) => {
       const itemDate = new Date(item.date);
       return itemDate >= startDate && itemDate <= endDate;
     });
-  }, [startDate, endDate]);
+  }, [dailyData, startDate, endDate]);
 
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
     const totalSales = filteredData.reduce((sum, item) => sum + item.totalSales, 0);
     const totalUnits = filteredData.reduce((sum, item) => sum + item.totalUnits, 0);
-    const totalInvoices = filteredData.reduce((sum, item) => sum + item.totalInvoices, 0);
+    const totalOrders = filteredData.reduce((sum, item) => sum + item.totalOrders, 0);
     const totalRevenue = filteredData.reduce((sum, item) => sum + item.revenue, 0);
     const avgDailySales = filteredData.length > 0 ? totalSales / filteredData.length : 0;
     const avgDailyRevenue = filteredData.length > 0 ? totalRevenue / filteredData.length : 0;
@@ -66,7 +102,7 @@ function DailyReports() {
     return {
       totalSales,
       totalUnits,
-      totalInvoices,
+      totalOrders,
       totalRevenue,
       avgDailySales: Math.round(avgDailySales),
       avgDailyRevenue: Math.round(avgDailyRevenue),
@@ -121,8 +157,8 @@ function DailyReports() {
       type: "number",
     },
     {
-      field: "totalInvoices",
-      headerName: "Total Invoices",
+      field: "totalOrders",
+      headerName: "Total Orders",
       width: 150,
       type: "number",
     },
@@ -151,12 +187,12 @@ function DailyReports() {
       new Date(item.date).toLocaleDateString(),
       item.totalSales,
       item.totalUnits,
-      item.totalInvoices,
+      item.totalOrders,
       `Rs. ${item.revenue.toLocaleString()}`,
     ]);
 
     doc.autoTable({
-      head: [["Date", "Total Sales", "Total Units", "Total Invoices", "Revenue"]],
+      head: [["Date", "Total Sales", "Total Units", "Total Orders", "Revenue"]],
       body: tableData,
       startY: 20,
     });
@@ -220,8 +256,8 @@ function DailyReports() {
                 <Receipt size={24} style={{ color: '#92400E' }} />
               </div>
               <div className="stat-details">
-                <p className="stat-label">Total Invoices</p>
-                <h3 className="stat-value">{summaryStats.totalInvoices.toLocaleString()}</h3>
+                <p className="stat-label">Total Orders</p>
+                <h3 className="stat-value">{summaryStats.totalOrders.toLocaleString()}</h3>
                 <p className="stat-change positive">+15% from last period</p>
               </div>
             </div>
