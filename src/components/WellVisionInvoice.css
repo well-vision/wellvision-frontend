@@ -269,6 +269,26 @@ input[aria-invalid="true"] {
 .print-button { background: #fff; color: var(--red); }
 .print-button:hover { background: var(--red); color: #fff; }
 
+.pdf-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 10px;
+}
+
+.pdf-button:hover {
+  background-color: #218838;
+}
+
+.pdf-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
 /* Print styles to mimic the artwork when printing */
 @media (max-height: 900px) {
   /* Scale down the entire sheet to fit shorter screens */
@@ -285,10 +305,11 @@ input[aria-invalid="true"] {
 }
 
 @media print {
-  /* Hide everything but the invoice */
+  /* Hide everything except the invoice */
   body { background: #fff; }
-  #root > * { display: none !important; }
+  * { display: none !important; }
   .bill-container { display: block !important; }
+  .bill-container * { display: block !important; }
   .invoice-actions { display: none !important; }
 
   /* Remove any scaling for print and fit page */
@@ -308,5 +329,22 @@ input[aria-invalid="true"] {
   .items-table th {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* Ensure all text is visible */
+  .bill-container,
+  .bill-container * {
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* Make sure inputs show their values */
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="tel"] {
+    border: none !important;
+    background: transparent !important;
+    color: #000 !important;
   }
 }

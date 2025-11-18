@@ -11,7 +11,8 @@ import {
   SortAsc,
   SortDesc,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock
 } from 'lucide-react';
 import './Bills.css';
 import { toast } from 'react-toastify';
@@ -28,10 +29,20 @@ function Bills() {
   const [totalBills, setTotalBills] = useState(0);
   const [selectedBills, setSelectedBills] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Filter states
   const [dateFilter, setDateFilter] = useState('');
   const [amountFilter, setAmountFilter] = useState({ min: '', max: '' });
+
+  // Real-time clock
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     fetchBills();
@@ -187,6 +198,10 @@ function Bills() {
             <h2>Bills Management</h2>
             <div className="bills-stats">
               <span className="stat-badge">Total: {totalBills}</span>
+              <div className="real-time-clock">
+                <Clock size={14} />
+                <span>{currentTime.toLocaleTimeString()}</span>
+              </div>
             </div>
           </div>
           <div className="bills-header-actions">
@@ -310,6 +325,7 @@ function Bills() {
                   <th onClick={() => handleSort('date')} className="sortable">
                     Date {getSortIcon('date')}
                   </th>
+                  <th>Time</th>
                   <th onClick={() => handleSort('name')} className="sortable">
                     Customer {getSortIcon('name')}
                   </th>
@@ -334,7 +350,8 @@ function Bills() {
                     </td>
                     <td className="bill-no">{bill.billNo}</td>
                     <td>{bill.orderNo}</td>
-                    <td>{new Date(bill.date).toLocaleString()}</td>
+                    <td>{new Date(bill.date).toLocaleDateString()}</td>
+                    <td>{new Date(bill.date).toLocaleTimeString()}</td>
                     <td>{bill.name}</td>
                     <td>{bill.tel}</td>
                     <td className="amount">{formatCurrency(bill.amount)}</td>

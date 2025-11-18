@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import './WellVisionInvoice.css';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const WellVisionInvoice = ({ customer }) => {
   const [searchParams] = useSearchParams();
@@ -10,10 +12,13 @@ const WellVisionInvoice = ({ customer }) => {
   const mode = searchParams.get('view') ? 'view' : searchParams.get('edit') ? 'edit' : 'create';
   const invoiceId = searchParams.get('view') || searchParams.get('edit');
   const customerId = searchParams.get('customerId');
+  const orderNo = searchParams.get('orderNo');
+  const customerNameParam = searchParams.get('customerName');
+  const customerEmailParam = searchParams.get('customerEmail');
   const formRef = useRef(null);
   const [formData, setFormData] = useState({
     orderNo: '',
-    date: new Date().toISOString().slice(0, 10),
+    date: new Date().toISOString().split('T')[0],
     billNo: '',
     name: '',
     tel: '',
@@ -108,6 +113,20 @@ const WellVisionInvoice = ({ customer }) => {
       address: prev.address || customer.address || '',
     }));
   }, [customer]);
+
+  // Auto-fill invoice from order parameters
+  useEffect(() => {
+    if (orderNo || customerNameParam || customerEmailParam) {
+      setFormData(prev => ({
+        ...prev,
+        orderNo: orderNo || prev.orderNo || '',
+        billNo: orderNo || prev.billNo || '',
+        name: prev.name || customerNameParam || '',
+        tel: prev.tel || customerEmailParam || '', // Using email as tel for now, adjust if needed
+        date: prev.date || new Date().toISOString().split('T')[0], // Auto-fill current date
+      }));
+    }
+  }, [orderNo, customerNameParam, customerEmailParam]);
 
   // Recalculate amount & balance when items or advance changes
   useEffect(() => {
@@ -229,7 +248,7 @@ const WellVisionInvoice = ({ customer }) => {
           if (resetAfterSave && mode === 'create') {
             setFormData({
               orderNo: '',
-              date: new Date().toISOString().slice(0, 10),
+              date: new Date().toISOString(),
               billNo: '',
               name: '',
               tel: '',
@@ -327,6 +346,55 @@ const WellVisionInvoice = ({ customer }) => {
     const result = await saveInvoice({ resetAfterSave: false });
     if (result && result.success) {
       window.print();
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (isSubmitting) return;
+    const result = await saveInvoice({ resetAfterSave: false });
+    if (result && result.success) {
+      try {
+        const element = formRef.current;
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#fff',
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const imgAspectRatio = imgWidth / imgHeight;
+        const pdfAspectRatio = pdfWidth / pdfHeight;
+
+        let finalWidth, finalHeight;
+        if (imgAspectRatio > pdfAspectRatio) {
+          // Image is wider, fit to width
+          finalWidth = pdfWidth;
+          finalHeight = pdfWidth / imgAspectRatio;
+        } else {
+          // Image is taller, fit to height
+          finalHeight = pdfHeight;
+          finalWidth = pdfHeight * imgAspectRatio;
+        }
+
+        const imgX = (pdfWidth - finalWidth) / 2;
+        const imgY = 0;
+
+        pdf.addImage(imgData, 'PNG', imgX, imgY, finalWidth, finalHeight);
+        pdf.save(`invoice-${formData.billNo || 'draft'}.pdf`);
+        toast.success('PDF downloaded successfully!');
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        toast.error('Failed to generate PDF');
+      }
     }
   };
 
@@ -548,6 +616,13 @@ const WellVisionInvoice = ({ customer }) => {
           onClick={handlePrint}
         >
           Print
+        </button>
+        <button
+          className="pdf-button"
+          type="button"
+          onClick={handleDownloadPDF}
+        >
+          Download PDF
         </button>
         {mode === 'view' && (
           <button

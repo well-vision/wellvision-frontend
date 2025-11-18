@@ -67,6 +67,8 @@ export default function SettingsPage() {
     // Invoice Settings
     invoicePrefix: 'INV',
     invoiceNumberStart: 1001,
+    orderPrefix: 'ORD',
+    orderNumberStart: 1001,
     showLogo: true,
     includeTerms: true,
   });
@@ -669,6 +671,26 @@ export default function SettingsPage() {
             type="number"
             value={settings.invoiceNumberStart}
             onChange={(e) => handleChange('invoiceNumberStart', parseInt(e.target.value))}
+            min="1"
+          />
+        </div>
+
+        <div className="setting-item">
+          <label>Order Prefix</label>
+          <input
+            type="text"
+            value={settings.orderPrefix}
+            onChange={(e) => handleChange('orderPrefix', e.target.value)}
+            placeholder="ORD"
+          />
+        </div>
+
+        <div className="setting-item">
+          <label>Starting Order Number</label>
+          <input
+            type="number"
+            value={settings.orderNumberStart}
+            onChange={(e) => handleChange('orderNumberStart', parseInt(e.target.value))}
             min="1"
           />
         </div>
