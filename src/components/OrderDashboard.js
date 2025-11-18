@@ -20,6 +20,7 @@ function Orders() {
   const location = useLocation();
 
   const [orders, setOrders] = useState([]);
+  const [statusCounts, setStatusCounts] = useState({});
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -101,17 +102,26 @@ function Orders() {
           }));
           setOrders(transformedOrders);
           setFilteredOrders(transformedOrders);
+
+          // Calculate status counts
+          const counts = {};
+          transformedOrders.forEach(order => {
+            counts[order.status] = (counts[order.status] || 0) + 1;
+          });
+          setStatusCounts(counts);
         } else {
           console.error('Failed to fetch orders:', data.message);
           // Fallback to sample data if API fails
           setOrders([]);
           setFilteredOrders([]);
+          setStatusCounts({});
         }
       } catch (err) {
         console.error('Error fetching orders:', err);
         // Fallback to sample data if API fails
         setOrders([]);
         setFilteredOrders([]);
+        setStatusCounts({});
       } finally {
         setLoading(false);
       }
@@ -379,9 +389,6 @@ function Orders() {
   };
 
   const totalOrders = orders.length;
-  const receivedCount = orders.filter(o => o.status === 'Order Received').length;
-  const processingCount = orders.filter(o => o.status === 'In Lab Processing').length;
-  const readyCount = orders.filter(o => o.status === 'Ready for Customer').length;
 
   return (
     <div className="orders-page">
@@ -396,18 +403,23 @@ function Orders() {
               <div className="orders-stats">
                 <span className="stat-badge">Total: {totalOrders}</span>
                 <span className="stat-badge" style={{ backgroundColor: '#DBEAFE', color: '#1E3A8A' }}>
-                  New: {receivedCount}
+                  Order Received: {statusCounts['Order Received'] || 0}
                 </span>
-                {processingCount > 0 && (
-                  <span className="stat-badge" style={{ backgroundColor: '#FFF7ED', color: '#92400E' }}>
-                    Processing: {processingCount}
-                  </span>
-                )}
-                {readyCount > 0 && (
-                  <span className="stat-badge" style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
-                    Ready: {readyCount}
-                  </span>
-                )}
+                <span className="stat-badge" style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}>
+                  Order Placed in Lab: {statusCounts['Order Placed in Lab'] || 0}
+                </span>
+                <span className="stat-badge" style={{ backgroundColor: '#FFF7ED', color: '#92400E' }}>
+                  In Lab Processing: {statusCounts['In Lab Processing'] || 0}
+                </span>
+                <span className="stat-badge" style={{ backgroundColor: '#F3E8FF', color: '#6D28D9' }}>
+                  Transit to Shop: {statusCounts['Transit to Shop'] || 0}
+                </span>
+                <span className="stat-badge" style={{ backgroundColor: '#DCFCE7', color: '#166534' }}>
+                  Ready for Customer: {statusCounts['Ready for Customer'] || 0}
+                </span>
+                <span className="stat-badge" style={{ backgroundColor: '#E0F2FE', color: '#0C4A6E' }}>
+                  Customer Collected: {statusCounts['Customer Collected'] || 0}
+                </span>
               </div>
             </div>
             <div className="orders-header-actions">
