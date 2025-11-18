@@ -21,26 +21,49 @@ const WellVisionInvoice = ({ customer }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch preview Bill No from backend (does not increment)
+  // Fetch preview Bill No and Order No from backend (does not increment counters)
   useEffect(() => {
-    const fetchBillNo = async () => {
+    const fetchNumbers = async () => {
       try {
-        const res = await fetch('http://localhost:4000/api/invoices/preview-bill-no');
-        const data = await res.json();
+        // Bill number preview
+        const billRes = await fetch('http://localhost:4000/api/invoices/preview-bill-no');
+        const billData = await billRes.json();
 
-        if (data.success) {
-          setFormData(prev => ({ ...prev, billNo: data.nextBillNo }));
-        } else {
-          toast.error(data.message || 'Failed to load Bill No');
+        // Order number preview
+        const orderRes = await fetch('http://localhost:4000/api/orders/preview-order-no');
+        const orderData = await orderRes.json();
+
+        setFormData(prev => ({
+          ...prev,
+          billNo: billData.success ? billData.nextBillNo : prev.billNo,
+          orderNo: orderData.success ? orderData.nextOrderNumber : prev.orderNo,
+        }));
+
+        if (!billData.success) {
+          toast.error(billData.message || 'Failed to load Bill No');
+        }
+        if (!orderData.success) {
+          toast.error(orderData.message || 'Failed to load Order No');
         }
       } catch (err) {
-        toast.error('Error fetching Bill No');
+        toast.error('Error fetching invoice/order numbers');
         console.error(err);
       }
     };
 
-    fetchBillNo();
+    fetchNumbers();
   }, []);
+
+  // Auto-fill invoice header when a customer is provided (Customer Profile Billing)
+  useEffect(() => {
+    if (!customer) return;
+    setFormData(prev => ({
+      ...prev,
+      name: prev.name || `${customer.givenName || ''} ${customer.familyName || ''}`.trim(),
+      tel: prev.tel || customer.phoneNo || '',
+      address: prev.address || customer.address || '',
+    }));
+  }, [customer]);
 
   // Recalculate amount & balance when items or advance changes
   useEffect(() => {
@@ -60,10 +83,9 @@ const WellVisionInvoice = ({ customer }) => {
     }));
   }, [formData.items, formData.advance]);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors = {};
 
-    if (!formData.orderNo.trim()) newErrors.orderNo = 'Order No is required';
     if (!formData.date) newErrors.date = 'Date is required';
     if (!formData.billNo.trim()) newErrors.billNo = 'Bill No is required';
     if (!formData.name.trim()) newErrors.name = 'Name is required';
@@ -75,15 +97,13 @@ const WellVisionInvoice = ({ customer }) => {
     if (!formData.address.trim()) newErrors.address = 'Address is required';
 
     const validItems = formData.items.some(
-      item =>
-        item.item.trim() !== '' &&
-        (!isNaN(item.rs) && item.rs.trim() !== '')
+      item => item.item.trim() !== ''
     );
-    if (!validItems) newErrors.items = 'At least one item with valid Rs. is required';
+    if (!validItems) newErrors.items = 'At least one item is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData.date, formData.billNo, formData.name, formData.tel, formData.address, formData.items]);
 
   const handleChange = (e, index, field) => {
     const { value } = e.target;
@@ -144,13 +164,16 @@ const WellVisionInvoice = ({ customer }) => {
           payload.customerId = customer._id;
         }
 
+        console.log('Sending payload:', JSON.stringify(payload, null, 2));
         const response = await fetch('http://localhost:4000/api/invoices/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(payload),
         });
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Response data:', JSON.stringify(data, null, 2));
         if (response.ok && data.success) {
           toast.success('Invoice saved successfully!');
 
@@ -190,7 +213,7 @@ const WellVisionInvoice = ({ customer }) => {
         setIsSubmitting(false);
       }
     },
-    [formData, customer]
+    [formData, customer, validateForm]
   );
 
   const handleSubmit = async (e) => {
