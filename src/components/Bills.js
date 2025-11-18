@@ -6,12 +6,13 @@ import {
   Download,
   Eye,
   Edit2,
-  Trash2,
+
   Filter,
   SortAsc,
   SortDesc,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock
 } from 'lucide-react';
 import './Bills.css';
 import { toast } from 'react-toastify';
@@ -28,10 +29,20 @@ function Bills() {
   const [totalBills, setTotalBills] = useState(0);
   const [selectedBills, setSelectedBills] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Filter states
   const [dateFilter, setDateFilter] = useState('');
   const [amountFilter, setAmountFilter] = useState({ min: '', max: '' });
+
+  // Real-time clock
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     fetchBills();
@@ -187,6 +198,10 @@ function Bills() {
             <h2>Bills Management</h2>
             <div className="bills-stats">
               <span className="stat-badge">Total: {totalBills}</span>
+              <div className="real-time-clock">
+                <Clock size={14} />
+                <span>{currentTime.toLocaleTimeString()}</span>
+              </div>
             </div>
           </div>
           <div className="bills-header-actions">
@@ -269,10 +284,6 @@ function Bills() {
         {selectedBills.length > 0 && (
           <div className="bulk-actions">
             <span>{selectedBills.length} selected</span>
-            <button className="bulk-delete-btn" onClick={handleBulkDelete}>
-              <Trash2 size={14} />
-              Delete Selected
-            </button>
           </div>
         )}
 
@@ -314,6 +325,7 @@ function Bills() {
                   <th onClick={() => handleSort('date')} className="sortable">
                     Date {getSortIcon('date')}
                   </th>
+                  <th>Time</th>
                   <th onClick={() => handleSort('name')} className="sortable">
                     Customer {getSortIcon('name')}
                   </th>
@@ -339,6 +351,7 @@ function Bills() {
                     <td className="bill-no">{bill.billNo}</td>
                     <td>{bill.orderNo}</td>
                     <td>{new Date(bill.date).toLocaleDateString()}</td>
+                    <td>{new Date(bill.date).toLocaleTimeString()}</td>
                     <td>{bill.name}</td>
                     <td>{bill.tel}</td>
                     <td className="amount">{formatCurrency(bill.amount)}</td>
@@ -348,24 +361,17 @@ function Bills() {
                       <div className="action-buttons">
                         <button
                           className="action-btn view-btn"
-                          onClick={() => navigate(`/bills/${bill._id}`)}
-                          title="View Bill"
+                          onClick={() => navigate(`/invoice?view=${bill._id}`)}
+                          title="View Invoice"
                         >
                           <Eye size={14} />
                         </button>
                         <button
                           className="action-btn edit-btn"
                           onClick={() => navigate(`/invoice?edit=${bill._id}`)}
-                          title="Edit Bill"
+                          title="Edit Invoice"
                         >
                           <Edit2 size={14} />
-                        </button>
-                        <button
-                          className="action-btn delete-btn"
-                          onClick={() => handleDeleteBill(bill._id)}
-                          title="Delete Bill"
-                        >
-                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>

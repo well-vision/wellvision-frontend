@@ -51,6 +51,19 @@
   font-weight: 500;
 }
 
+.real-time-clock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #f0f9ff;
+  color: #0369a1;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Courier New', monospace;
+}
+
 .bills-header-actions {
   display: flex;
   align-items: center;

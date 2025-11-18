@@ -1,13 +1,24 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import './WellVisionInvoice.css';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
-const WellVisionInvoice = () => {
+const WellVisionInvoice = ({ customer }) => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const mode = searchParams.get('view') ? 'view' : searchParams.get('edit') ? 'edit' : 'create';
+  const invoiceId = searchParams.get('view') || searchParams.get('edit');
+  const customerId = searchParams.get('customerId');
+  const orderNo = searchParams.get('orderNo');
+  const customerNameParam = searchParams.get('customerName');
+  const customerEmailParam = searchParams.get('customerEmail');
   const formRef = useRef(null);
   const [formData, setFormData] = useState({
     orderNo: '',
-    date: new Date().toISOString().slice(0, 10),
+    date: new Date().toISOString().split('T')[0],
     billNo: '',
     name: '',
     tel: '',
@@ -21,26 +32,101 @@ const WellVisionInvoice = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch preview Bill No from backend (does not increment)
+  // Fetch invoice data if in view or edit mode
   useEffect(() => {
-    const fetchBillNo = async () => {
-      try {
-        const res = await fetch('http://localhost:4000/api/invoices/preview-bill-no');
-        const data = await res.json();
+    if (mode === 'create') {
+      const fetchNumbers = async () => {
+        try {
+          // Bill number preview
+          const billRes = await fetch('http://localhost:4000/api/invoices/preview-bill-no');
+          const billData = await billRes.json();
 
-        if (data.success) {
-          setFormData(prev => ({ ...prev, billNo: data.nextBillNo }));
-        } else {
-          toast.error(data.message || 'Failed to load Bill No');
+          // Order number preview
+          const orderRes = await fetch('http://localhost:4000/api/orders/preview-order-no');
+          const orderData = await orderRes.json();
+
+          setFormData(prev => ({
+            ...prev,
+            billNo: billData.success ? billData.nextBillNo : prev.billNo,
+            orderNo: orderData.success ? orderData.nextOrderNumber : prev.orderNo,
+          }));
+
+          if (!billData.success) {
+            toast.error(billData.message || 'Failed to load Bill No');
+          }
+          if (!orderData.success) {
+            toast.error(orderData.message || 'Failed to load Order No');
+          }
+        } catch (err) {
+          toast.error('Error fetching invoice/order numbers');
+          console.error(err);
         }
-      } catch (err) {
-        toast.error('Error fetching Bill No');
-        console.error(err);
-      }
-    };
+      };
 
-    fetchBillNo();
-  }, []);
+      fetchNumbers();
+    } else if (invoiceId) {
+      const fetchInvoice = async () => {
+        try {
+          const response = await fetch(`http://localhost:4000/api/invoices/${invoiceId}`, {
+            credentials: 'include',
+          });
+          const data = await response.json();
+          if (data.success) {
+            const invoice = data.invoice;
+            setFormData({
+              orderNo: invoice.orderNo || '',
+              date: invoice.date ? new Date(invoice.date).toISOString().slice(0, 10) : '',
+              billNo: invoice.billNo || '',
+              name: invoice.name || '',
+              tel: invoice.tel || '',
+              address: invoice.address || '',
+              items: invoice.items && invoice.items.length > 0 ? invoice.items.map(item => ({
+                item: item.item || '',
+                description: item.description || '',
+                rs: item.rs || '',
+                cts: item.cts || '',
+              })) : Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
+              amount: invoice.amount || '',
+              advance: invoice.advance || '',
+              balance: invoice.balance || '',
+            });
+          } else {
+            toast.error('Failed to load invoice');
+          }
+        } catch (error) {
+          toast.error('Error loading invoice');
+          console.error(error);
+        }
+      };
+
+      fetchInvoice();
+    }
+  }, [mode, invoiceId]);
+
+  // Auto-fill invoice header when a customer is provided (Customer Profile Billing)
+  useEffect(() => {
+    if (!customer) return;
+    setFormData(prev => ({
+      ...prev,
+      name: prev.name || `${customer.givenName || ''} ${customer.familyName || ''}`.trim(),
+      tel: prev.tel || customer.phoneNo || '',
+      address: prev.address || customer.address || '',
+    }));
+  }, [customer]);
+
+  // Auto-fill invoice from order parameters
+  useEffect(() => {
+    if (orderNo || customerNameParam || customerEmailParam) {
+      setFormData(prev => ({
+        ...prev,
+        orderNo: orderNo || prev.orderNo || '',
+        billNo: orderNo || prev.billNo || '',
+        name: prev.name || customerNameParam || '',
+        tel: prev.tel || customerEmailParam || '', // Using email as tel for now, adjust if needed
+        date: prev.date || new Date().toISOString().split('T')[0], // Auto-fill current date
+      }));
+    }
+  }, [orderNo, customerNameParam, customerEmailParam]);
 
   // Recalculate amount & balance when items or advance changes
   useEffect(() => {
@@ -60,10 +146,9 @@ const WellVisionInvoice = () => {
     }));
   }, [formData.items, formData.advance]);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors = {};
 
-    if (!formData.orderNo.trim()) newErrors.orderNo = 'Order No is required';
     if (!formData.date) newErrors.date = 'Date is required';
     if (!formData.billNo.trim()) newErrors.billNo = 'Bill No is required';
     if (!formData.name.trim()) newErrors.name = 'Name is required';
@@ -75,15 +160,13 @@ const WellVisionInvoice = () => {
     if (!formData.address.trim()) newErrors.address = 'Address is required';
 
     const validItems = formData.items.some(
-      item =>
-        item.item.trim() !== '' &&
-        (!isNaN(item.rs) && item.rs.trim() !== '')
+      item => item.item.trim() !== ''
     );
-    if (!validItems) newErrors.items = 'At least one item with valid Rs. is required';
+    if (!validItems) newErrors.items = 'At least one item is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData.date, formData.billNo, formData.name, formData.tel, formData.address, formData.items]);
 
   const handleChange = (e, index, field) => {
     const { value } = e.target;
@@ -113,7 +196,8 @@ const WellVisionInvoice = () => {
       type={type}
       name={name}
       value={value}
-      onChange={onChange}
+      onChange={mode === 'view' ? undefined : onChange}
+      readOnly={mode === 'view'}
       style={{
         border: 'none',
         borderBottom: error ? '2px solid red' : '1px dotted black',
@@ -129,72 +213,190 @@ const WellVisionInvoice = () => {
     />
   );
 
-  const saveInvoice = useCallback(async () => {
-    if (!validateForm()) {
-      toast.warning('Please fix form errors before submitting.');
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('http://localhost:4000/api/invoices/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
-        toast.success('Invoice saved successfully!');
-        setFormData({
-          orderNo: '',
-          date: new Date().toISOString().slice(0, 10),
-          billNo: '',
-          name: '',
-          tel: '',
-          address: '',
-          items: Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
-          amount: '',
-          advance: '',
-          balance: '',
-        });
-        setErrors({});
-        const res = await fetch('http://localhost:4000/api/invoices/next-bill-no');
-        const data2 = await res.json();
-        if (data2.success) {
-          setFormData(prev => ({ ...prev, billNo: data2.nextBillNo }));
-        }
-      } else {
-        toast.error('Failed to save invoice: ' + (data.message || 'Unknown error'));
+  const saveInvoice = useCallback(
+    async (options = { resetAfterSave: true }) => {
+      const { resetAfterSave } = options;
+
+      if (mode === 'view') return { success: true };
+
+      if (!validateForm()) {
+        toast.warning('Please fix form errors before submitting.');
+        return { success: false };
       }
-    } catch (error) {
-      toast.error('Error saving invoice: ' + error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [formData]);
+      setIsSubmitting(true);
+      try {
+        const payload = { ...formData };
+        if (customer && customer._id) {
+          payload.customerId = customer._id;
+        }
+
+        console.log('Sending payload:', JSON.stringify(payload, null, 2));
+        const url = mode === 'edit' && invoiceId ? `http://localhost:4000/api/invoices/${invoiceId}` : 'http://localhost:4000/api/invoices/create';
+        const method = mode === 'edit' ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload),
+        });
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', JSON.stringify(data, null, 2));
+        if (response.ok && data.success) {
+          toast.success(`Invoice ${mode === 'edit' ? 'updated' : 'saved'} successfully!`);
+
+          if (resetAfterSave && mode === 'create') {
+            setFormData({
+              orderNo: '',
+              date: new Date().toISOString(),
+              billNo: '',
+              name: '',
+              tel: '',
+              address: '',
+              items: Array(4).fill(null).map(() => ({ item: '', description: '', rs: '', cts: '' })),
+              amount: '',
+              advance: '',
+              balance: '',
+            });
+            setErrors({});
+
+            const res = await fetch('http://localhost:4000/api/invoices/next-bill-no', {
+              credentials: 'include',
+            });
+            const data2 = await res.json();
+            if (data2.success) {
+              setFormData(prev => ({ ...prev, billNo: data2.nextBillNo }));
+            }
+          } else if (mode === 'edit') {
+            // Navigate back to bills page after successful update
+            setTimeout(() => {
+              if (customerId) {
+                navigate(`/customer/${customerId}?tab=Bills`);
+              } else if (customer) {
+                navigate(-1);
+              } else {
+                navigate('/bills');
+              }
+            }, 2000); // 2 second delay to show the success message
+          }
+
+          return { success: true, invoice: data.invoice };
+        } else {
+          toast.error(`Failed to ${mode === 'edit' ? 'update' : 'save'} invoice: ` + (data.message || 'Unknown error'));
+          return { success: false };
+        }
+      } catch (error) {
+        toast.error(`Error ${mode === 'edit' ? 'updating' : 'saving'} invoice: ` + error.message);
+        return { success: false };
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [formData, customer, validateForm, mode, invoiceId]
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     await saveInvoice();
   };
 
-  // Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+P to print
+  // Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+P to print, Ctrl/Cmd+Z to go back
   useEffect(() => {
     const onKeyDown = async (e) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const saveCombo = (isMac && e.metaKey && e.key.toLowerCase() === 's') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 's');
-      const printCombo = (isMac && e.metaKey && e.key.toLowerCase() === 'p') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 'p');
+      const saveCombo =
+        (isMac && e.metaKey && e.key.toLowerCase() === 's') ||
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === 's');
+      const printCombo =
+        (isMac && e.metaKey && e.key.toLowerCase() === 'p') ||
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === 'p');
+      const backCombo =
+        (isMac && e.metaKey && e.key.toLowerCase() === 'z') ||
+        (!isMac && e.ctrlKey && e.key.toLowerCase() === 'z');
 
       if (saveCombo) {
         e.preventDefault();
         if (!isSubmitting) await saveInvoice();
       } else if (printCombo) {
         e.preventDefault();
-        window.print();
+        if (!isSubmitting) {
+          const result = await saveInvoice({ resetAfterSave: false });
+          if (result && result.success) {
+            window.print();
+          }
+        }
+      } else if (backCombo) {
+        e.preventDefault();
+        if (customerId) {
+          navigate(`/customer/${customerId}?tab=Bills`);
+        } else if (customer) {
+          navigate(-1);
+        } else {
+          navigate('/bills');
+        }
       }
     };
+
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [saveInvoice, isSubmitting]);
+  }, [saveInvoice, isSubmitting, navigate]);
+
+  const handlePrint = async () => {
+    if (isSubmitting) return;
+    const result = await saveInvoice({ resetAfterSave: false });
+    if (result && result.success) {
+      window.print();
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (isSubmitting) return;
+    const result = await saveInvoice({ resetAfterSave: false });
+    if (result && result.success) {
+      try {
+        const element = formRef.current;
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#fff',
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const imgAspectRatio = imgWidth / imgHeight;
+        const pdfAspectRatio = pdfWidth / pdfHeight;
+
+        let finalWidth, finalHeight;
+        if (imgAspectRatio > pdfAspectRatio) {
+          // Image is wider, fit to width
+          finalWidth = pdfWidth;
+          finalHeight = pdfWidth / imgAspectRatio;
+        } else {
+          // Image is taller, fit to height
+          finalHeight = pdfHeight;
+          finalWidth = pdfHeight * imgAspectRatio;
+        }
+
+        const imgX = (pdfWidth - finalWidth) / 2;
+        const imgY = 0;
+
+        pdf.addImage(imgData, 'PNG', imgX, imgY, finalWidth, finalHeight);
+        pdf.save(`invoice-${formData.billNo || 'draft'}.pdf`);
+        toast.success('PDF downloaded successfully!');
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        toast.error('Failed to generate PDF');
+      }
+    }
+  };
 
   return (
     <form ref={formRef} className="bill-container" onSubmit={handleSubmit} noValidate>
@@ -398,12 +600,47 @@ const WellVisionInvoice = () => {
       <div className="galewela">Galewela</div>
 
       <div className="invoice-actions">
-        <button className="save-button" type="button" onClick={saveInvoice} disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save'}
-        </button>
-        <button className="print-button" type="button" onClick={() => window.print()}>
+        {mode !== 'view' && (
+          <button
+            className="save-button"
+            type="button"
+            onClick={() => saveInvoice()}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Update' : 'Save'}
+          </button>
+        )}
+        <button
+          className="print-button"
+          type="button"
+          onClick={handlePrint}
+        >
           Print
         </button>
+        <button
+          className="pdf-button"
+          type="button"
+          onClick={handleDownloadPDF}
+        >
+          Download PDF
+        </button>
+        {mode === 'view' && (
+          <button
+            className="back-button"
+            type="button"
+            onClick={() => {
+              if (customerId) {
+                navigate(`/customer/${customerId}?tab=Bills`);
+              } else if (customer) {
+                navigate(-1);
+              } else {
+                navigate('/bills');
+              }
+            }}
+          >
+            Back
+          </button>
+        )}
       </div>
     </form>
   );

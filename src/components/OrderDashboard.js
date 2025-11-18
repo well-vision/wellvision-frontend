@@ -55,6 +55,19 @@ function Orders() {
     { value: 'Ready for Customer', label: 'Ready for Customer' }
   ];
 
+  // Notification functions
+  const showNotification = (message, type = 'success') => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(notification => notification.id !== id));
+    }, 5000);
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
   // Fetch orders and products from backend
   useEffect(() => {
     const fetchOrders = async () => {
@@ -168,6 +181,29 @@ function Orders() {
     }
   }, [showAddModal, orderForm]);
 
+  // Fetch preview order number when modal opens
+  useEffect(() => {
+    if (showAddModal && !orderForm.orderNumber) {
+      const fetchPreviewOrderNumber = async () => {
+        try {
+          const response = await fetch('http://localhost:4000/api/orders/preview-order-no', {
+            credentials: 'include'
+          });
+          const data = await response.json();
+          if (data.success) {
+            setOrderForm(prev => ({ ...prev, orderNumber: data.nextOrderNumber }));
+          } else {
+            showNotification('Failed to load order number', 'error');
+          }
+        } catch (error) {
+          console.error('Error fetching order number:', error);
+          showNotification('Error loading order number', 'error');
+        }
+      };
+      fetchPreviewOrderNumber();
+    }
+  }, [showAddModal, orderForm.orderNumber, showNotification]);
+
   // Filter orders
   useEffect(() => {
     let filtered = orders;
@@ -207,19 +243,6 @@ function Orders() {
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  // Notification functions
-  const showNotification = (message, type = 'success') => {
-    const id = Date.now();
-    setNotifications(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(notification => notification.id !== id));
-    }, 5000);
-  };
-
-  const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
   };
 
   const handleViewOrder = (order) => {
@@ -699,6 +722,13 @@ function Orders() {
                   onClick={() => setShowModal(false)}
                 >
                   Close
+                </button>
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-secondary"
+                  onClick={() => navigate(`/invoice?orderNo=${selectedOrder.orderNumber}&customerName=${selectedOrder.customerName}&customerEmail=${selectedOrder.notes || ''}`)}
+                >
+                  Create Invoice
                 </button>
                 <button
                   type="button"
