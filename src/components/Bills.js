@@ -5,14 +5,12 @@ import {
   Search,
   Download,
   Eye,
-  Edit2,
 
   Filter,
   SortAsc,
   SortDesc,
   ChevronLeft,
-  ChevronRight,
-  Clock
+  ChevronRight
 } from 'lucide-react';
 import './Bills.css';
 import { toast } from 'react-toastify';
@@ -29,20 +27,9 @@ function Bills() {
   const [totalBills, setTotalBills] = useState(0);
   const [selectedBills, setSelectedBills] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
-
   // Filter states
   const [dateFilter, setDateFilter] = useState('');
   const [amountFilter, setAmountFilter] = useState({ min: '', max: '' });
-
-  // Real-time clock
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     fetchBills();
@@ -198,10 +185,6 @@ function Bills() {
             <h2>Bills Management</h2>
             <div className="bills-stats">
               <span className="stat-badge">Total: {totalBills}</span>
-              <div className="real-time-clock">
-                <Clock size={14} />
-                <span>{currentTime.toLocaleTimeString()}</span>
-              </div>
             </div>
           </div>
           <div className="bills-header-actions">
@@ -365,13 +348,6 @@ function Bills() {
                           title="View Invoice"
                         >
                           <Eye size={14} />
-                        </button>
-                        <button
-                          className="action-btn edit-btn"
-                          onClick={() => navigate(`/invoice?edit=${bill._id}`)}
-                          title="Edit Invoice"
-                        >
-                          <Edit2 size={14} />
                         </button>
                       </div>
                     </td>
