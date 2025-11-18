@@ -3,15 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import './Products.css';
 import SidebarMenu from '../components/SidebarMenu';
 import {
-  Plus,
   Download,
   Search,
   Grid,
   List,
-  Edit2,
-  Trash2,
-  X,
-  Eye
+  Eye,
+  X
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -394,10 +391,6 @@ function Products() {
                     <Download size={16} />
                     Export
                   </button>
-                  <button className="add-product-btn" onClick={handleAddProduct}>
-                    <Plus size={16} />
-                    Add Product
-                  </button>
                 </>
               )}
             </div>
@@ -491,14 +484,8 @@ function Products() {
               <p className="empty-state-description">
                 {searchQuery || categoryFilter !== 'all' || stockFilter !== 'all' || brandFilter !== 'all'
                   ? 'Try adjusting your filters'
-                  : 'Get started by adding your first product'}
+                  : 'No products available'}
               </p>
-              {!(searchQuery || categoryFilter !== 'all' || stockFilter !== 'all' || brandFilter !== 'all') && (
-                <button className="add-product-btn" onClick={handleAddProduct}>
-                  <Plus size={16} />
-                  Add Your First Product
-                </button>
-              )}
             </div>
           ) : viewMode === 'grid' ? (
             <div className="products-grid">
@@ -557,29 +544,13 @@ function Products() {
                           {isProductSelected(product._id) ? 'Selected' : 'Select'}
                         </button>
                       ) : (
-                        <>
-                          <button
-                            className="action-btn view-action-btn"
-                            onClick={() => navigate(`/products/${product._id}`)}
-                          >
-                            <Eye size={14} />
-                            View
-                          </button>
-                          <button
-                            className="action-btn edit-action-btn"
-                            onClick={() => handleEditProduct(product)}
-                          >
-                            <Edit2 size={14} />
-                            Edit
-                          </button>
-                          <button
-                            className="action-btn delete-action-btn"
-                            onClick={() => handleDeleteProduct(product._id)}
-                          >
-                            <Trash2 size={14} />
-                            Delete
-                          </button>
-                        </>
+                        <button
+                          className="action-btn view-action-btn"
+                          onClick={() => navigate(`/products/${product._id}`)}
+                        >
+                          <Eye size={14} />
+                          View
+                        </button>
                       )}
                     </div>
                   </div>
@@ -662,17 +633,11 @@ function Products() {
                         <td>
                           <div className="table-actions">
                             <button
-                              className="table-action-btn edit-action-btn"
-                              onClick={() => handleEditProduct(product)}
+                              className="table-action-btn view-action-btn"
+                              onClick={() => navigate(`/products/${product._id}`)}
                             >
-                              <Edit2 size={14} />
-                              Edit
-                            </button>
-                            <button
-                              className="table-action-btn delete-action-btn"
-                              onClick={() => handleDeleteProduct(product._id)}
-                            >
-                              <Trash2 size={14} />
+                              <Eye size={14} />
+                              View
                             </button>
                           </div>
                         </td>

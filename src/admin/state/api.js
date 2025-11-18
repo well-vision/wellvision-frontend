@@ -92,6 +92,14 @@ export const api = createApi({
       query: () => "client/products",
       providesTags: ["Products"],
     }),
+    createProduct: build.mutation({
+      query: (productData) => ({
+        url: "client/products",
+        method: "POST",
+        body: productData,
+      }),
+      invalidatesTags: ["Products"],
+    }),
     getCustomers: build.query({
       query: () => "client/customers",
       providesTags: ["Customers"],
@@ -165,6 +173,7 @@ export const api = createApi({
 export const {
   useGetUserQuery,
   useGetProductsQuery,
+  useCreateProductMutation,
   useGetCustomersQuery,
   useGetTransactionsQuery,
   useGetSalesQuery,

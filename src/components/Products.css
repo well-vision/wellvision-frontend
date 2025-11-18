@@ -515,7 +515,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  /* Ensure this sits above the admin navbar/app bar (MUI appBar is typically zIndex 1100) */
+  z-index: 1400;
   padding: 20px;
   animation: fadeIn 0.2s ease-in-out;
 }
@@ -663,12 +664,13 @@
 }
 
 .modal-btn-submit {
-  background-color: #0d9488;
-  color: white;
+  /* Use admin secondary accent tone so admin Add Product matches dashboard buttons */
+  background-color: #997d3d; /* approx theme.secondary.light in admin theme */
+  color: #f9fafb;
 }
 
 .modal-btn-submit:hover {
-  background-color: #0f766e;
+  background-color: #665429; /* darker secondary tone for hover */
 }
 
 .modal-btn-submit:disabled {
