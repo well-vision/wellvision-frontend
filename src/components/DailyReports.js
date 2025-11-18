@@ -33,36 +33,36 @@ function DailyReports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch orders from backend
+  // Fetch bills from backend
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchBills = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:4000/api/orders', {
+        const response = await fetch('http://localhost:4000/api/invoices', {
           credentials: 'include'
         });
         const data = await response.json();
 
         if (data.success) {
-          setOrders(data.data);
+          setOrders(data.invoices); // Using orders state for bills data
         } else {
-          setError(data.message || 'Failed to fetch orders');
+          setError(data.message || 'Failed to fetch bills');
         }
       } catch (err) {
-        setError('Error fetching orders');
-        console.error('Fetch orders error:', err);
+        setError('Error fetching bills');
+        console.error('Fetch bills error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrders();
+    fetchBills();
   }, []);
 
-  // Group orders by date and calculate daily metrics
+  // Group bills by date and calculate daily metrics
   const dailyData = useMemo(() => {
-    const grouped = orders.reduce((acc, order) => {
-      const dateKey = new Date(order.placedAt).toISOString().split('T')[0]; // YYYY-MM-DD format
+    const grouped = orders.reduce((acc, bill) => {
+      const dateKey = new Date(bill.date).toISOString().split('T')[0]; // YYYY-MM-DD format
       if (!acc[dateKey]) {
         acc[dateKey] = {
           date: dateKey,
@@ -72,10 +72,10 @@ function DailyReports() {
           revenue: 0
         };
       }
-      acc[dateKey].totalSales += 1; // Each order is a sale
-      acc[dateKey].totalUnits += order.items.reduce((sum, item) => sum + (item.quantity || 0), 0); // Sum quantities for units
+      acc[dateKey].totalSales += 1; // Each bill is a sale
+      acc[dateKey].totalUnits += 1; // Each bill represents 1 unit (simplified)
       acc[dateKey].totalOrders += 1;
-      acc[dateKey].revenue += order.total;
+      acc[dateKey].revenue += bill.amount; // Use bill amount for revenue
       return acc;
     }, {});
 
@@ -89,6 +89,17 @@ function DailyReports() {
       return itemDate >= startDate && itemDate <= endDate;
     });
   }, [dailyData, startDate, endDate]);
+
+  // Data for graph - always show current month
+  const currentMonthData = useMemo(() => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return dailyData.filter((item) => {
+      const itemDate = new Date(item.date);
+      return itemDate >= monthStart && itemDate <= monthEnd;
+    });
+  }, [dailyData]);
 
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
@@ -109,16 +120,16 @@ function DailyReports() {
     };
   }, [filteredData]);
 
-  // Prepare chart data
+  // Prepare chart data - always show current month data
   const formattedData = useMemo(() => {
-    if (!filteredData || filteredData.length === 0) {
+    if (!currentMonthData || currentMonthData.length === 0) {
       return [];
     }
 
     const salesLine = {
       id: "Total Sales",
       color: "#0d9488",
-      data: filteredData.map((item) => ({
+      data: currentMonthData.map((item) => ({
         x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         y: item.totalSales,
       })),
@@ -127,14 +138,14 @@ function DailyReports() {
     const unitsLine = {
       id: "Total Units",
       color: "#14b8a6",
-      data: filteredData.map((item) => ({
+      data: currentMonthData.map((item) => ({
         x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         y: item.totalUnits,
       })),
     };
 
     return view === "sales" ? [salesLine] : [unitsLine];
-  }, [filteredData, view]);
+  }, [currentMonthData, view]);
 
   // Data grid columns
   const columns = [

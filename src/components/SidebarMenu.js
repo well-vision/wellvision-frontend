@@ -24,12 +24,48 @@ export default function SidebarMenu({ active = 'home' }) {
   const [isOpen, setIsOpen] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [notifications, setNotifications] = useState({
-    orders: 5,
-    lowStock: 3
+    orders: 0,
+    lowStock: 0
   });
   const sidebarRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Fetch real-time notifications from backend
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        // Fetch pending orders count
+        const ordersResponse = await fetch('http://localhost:4000/api/orders/pending', {
+          credentials: 'include'
+        });
+        const ordersData = await ordersResponse.json();
+        const pendingOrders = ordersData.success ? ordersData.orders.length : 0;
+
+        // Fetch low stock products count
+        const productsResponse = await fetch('http://localhost:4000/api/products/low-stock', {
+          credentials: 'include'
+        });
+        const productsData = await productsResponse.json();
+        const lowStockCount = productsData.success ? productsData.products.length : 0;
+
+        setNotifications({
+          orders: pendingOrders,
+          lowStock: lowStockCount
+        });
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        // Keep default values on error
+      }
+    };
+
+    fetchNotifications();
+
+    // Refresh notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Enhanced menu items with nested navigation and icons
   const menuItems = [
@@ -54,14 +90,12 @@ export default function SidebarMenu({ active = 'home' }) {
       path: '/customers',
       description: 'Customer Management'
     },
-    { 
-      label: 'Products', 
-      icon: <Package />, 
+    {
+      label: 'Products',
+      icon: <Package />,
       key: 'products',
       path: '/products',
-      description: 'Inventory & Stock',
-      badge: notifications.lowStock > 0 ? notifications.lowStock : null,
-      badgeType: 'warning'
+      description: 'Inventory & Stock'
     },
     { 
       label: 'Invoices', 
@@ -82,9 +116,7 @@ export default function SidebarMenu({ active = 'home' }) {
       icon: <Logs />,
       key: 'orders',
       path: '/orders',
-      description: 'Order Processing',
-      badge: notifications.orders > 0 ? notifications.orders : null,
-      badgeType: 'info'
+      description: 'Order Processing'
     },
 
   ];
