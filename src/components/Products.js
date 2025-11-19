@@ -30,6 +30,8 @@ function Products() {
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingProduct, setViewingProduct] = useState(null);
 
   // Selection mode state
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -161,6 +163,11 @@ function Products() {
       'accessories': '🎁'
     };
     return icons[category] || '📦';
+  };
+
+  const handleViewProduct = (product) => {
+    setViewingProduct(product);
+    setShowViewModal(true);
   };
 
   const handleAddProduct = () => {
@@ -560,7 +567,7 @@ function Products() {
                         <>
                           <button
                             className="action-btn view-action-btn"
-                            onClick={() => navigate(`/products/${product._id}`)}
+                            onClick={() => handleViewProduct(product)}
                           >
                             <Eye size={14} />
                             View
@@ -900,6 +907,115 @@ function Products() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Product Modal */}
+      {showViewModal && viewingProduct && (
+        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="modal-content view-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Product Details</h3>
+              <button className="modal-close" onClick={() => setShowViewModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="product-details-grid">
+                <div className="product-image-section">
+                  <div className="product-large-image">
+                    {getCategoryIcon(viewingProduct.category)}
+                  </div>
+                  <span className={`product-badge badge-${getStockStatus(viewingProduct)}`}>
+                    {getStockBadgeText(viewingProduct)}
+                  </span>
+                </div>
+
+                <div className="product-info-section">
+                  <div className="product-basic-info">
+                    <h2 className="product-detail-name">{viewingProduct.name}</h2>
+                    <p className="product-detail-category">
+                      {categories.find(c => c.value === viewingProduct.category)?.label}
+                    </p>
+                    <p className="product-detail-brand">
+                      Brand: {brands.find(b => b.value === viewingProduct.brand)?.label}
+                    </p>
+                    {viewingProduct.model && (
+                      <p className="product-detail-model">Model: {viewingProduct.model}</p>
+                    )}
+                  </div>
+
+                  <div className="product-pricing-info">
+                    <div className="price-display">
+                      <span className="selling-price">Rs. {viewingProduct.price.toLocaleString()}</span>
+                      <span className="cost-price">Cost: Rs. {viewingProduct.cost.toLocaleString()}</span>
+                    </div>
+                    <div className="stock-info">
+                      <span className="stock-quantity">Stock: {viewingProduct.stock}</span>
+                      {viewingProduct.reorderLevel > 0 && (
+                        <span className="reorder-level">Reorder Level: {viewingProduct.reorderLevel}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="product-specifications">
+                    <h4>Specifications</h4>
+                    <div className="specs-grid">
+                      {viewingProduct.frameMaterial && (
+                        <div className="spec-item">
+                          <span className="spec-label">Frame Material:</span>
+                          <span className="spec-value">{viewingProduct.frameMaterial}</span>
+                        </div>
+                      )}
+                      {viewingProduct.frameColor && (
+                        <div className="spec-item">
+                          <span className="spec-label">Frame Color:</span>
+                          <span className="spec-value">{viewingProduct.frameColor}</span>
+                        </div>
+                      )}
+                      {viewingProduct.lensType && (
+                        <div className="spec-item">
+                          <span className="spec-label">Lens Type:</span>
+                          <span className="spec-value">{viewingProduct.lensType}</span>
+                        </div>
+                      )}
+                      <div className="spec-item">
+                        <span className="spec-label">Prescription:</span>
+                        <span className="spec-value">{viewingProduct.prescription ? 'Available' : 'Not Available'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {viewingProduct.description && (
+                    <div className="product-description-section">
+                      <h4>Description</h4>
+                      <p className="product-description-text">{viewingProduct.description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="modal-btn modal-btn-cancel"
+                onClick={() => setShowViewModal(false)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="modal-btn modal-btn-submit"
+                onClick={() => {
+                  setShowViewModal(false);
+                  handleEditProduct(viewingProduct);
+                }}
+              >
+                Edit Product
+              </button>
+            </div>
           </div>
         </div>
       )}
