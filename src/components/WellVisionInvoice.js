@@ -402,7 +402,7 @@ const WellVisionInvoice = ({ customer }) => {
     <form ref={formRef} className="bill-container" onSubmit={handleSubmit} noValidate>
       <div className="header">
         <div className="logo-section">
-          <img src="/logo.png" alt="Well Vision Logo" className="logo" />
+          <img src="/Logo Red.png" alt="Well Vision Logo" className="logo" />
           <div>
             <h1>WELL VISION</h1>
             <p className="tagline">THE PATH TO CLEAR VISION</p>
