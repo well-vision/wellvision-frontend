@@ -280,7 +280,7 @@ export default function SidebarMenu({ active = 'home' }) {
         aria-label="Main sidebar navigation"
       >
         <div className="sidebar-logo">
-          <img src="/Logo Red.png" alt="Well Vision Logo" className="logo-icon" />
+          <img src="/Logo White.png" alt="Well Vision Logo" className="logo-icon" />
           <div className="logo-text">
             <h1>Well Vision</h1>
             <p>Spectacle Shop System</p>
