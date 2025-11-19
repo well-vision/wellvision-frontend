@@ -52,10 +52,6 @@ const navItems = [
     icon: <ReceiptLongOutlined />,
   },
   {
-    text: "Geography",
-    icon: <PublicOutlined />,
-  },
-  {
     text: "Sales",
     icon: null,
   },
@@ -78,10 +74,6 @@ const navItems = [
   {
     text: "Management",
     icon: null,
-  },
-  {
-    text: "Admin",
-    icon: <AdminPanelSettingsOutlined />,
   },
   {
     text: "Staff",
