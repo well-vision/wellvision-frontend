@@ -194,12 +194,6 @@ function DailyReports() {
       valueFormatter: (params) => new Date(params.value).toLocaleDateString(),
     },
     {
-      field: "totalSales",
-      headerName: "Total Sales",
-      width: 150,
-      type: "number",
-    },
-    {
       field: "totalUnits",
       headerName: "Total Units",
       width: 150,
@@ -234,14 +228,13 @@ function DailyReports() {
 
     const tableData = filteredData.map((item) => [
       new Date(item.date).toLocaleDateString(),
-      item.totalSales,
       item.totalUnits,
       item.totalOrders,
       `Rs. ${item.revenue.toLocaleString()}`,
     ]);
 
     doc.autoTable({
-      head: [["Date", "Total Sales", "Total Units", "Total Orders", "Revenue"]],
+      head: [["Date", "Total Units", "Total Orders", "Revenue"]],
       body: tableData,
       startY: 20,
     });
