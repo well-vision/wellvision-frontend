@@ -27,7 +27,7 @@ function DailyReports() {
 
   const [startDate, setStartDate] = useState(currentMonthStart);
   const [endDate, setEndDate] = useState(currentMonthEnd);
-  const [view, setView] = useState("revenue");
+  const [view, setView] = useState("units");
 
   const [orders, setOrders] = useState([]);
   const [invoices, setInvoices] = useState([]);
@@ -128,26 +128,27 @@ function DailyReports() {
     });
   }, [dailyData]);
 
-  // Calculate total units from all orders ever (cumulative)
-  const totalUnitsAllTime = useMemo(() => {
-    return orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-  }, [orders]);
-
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
     const totalSales = filteredData.reduce((sum, item) => sum + item.totalSales, 0);
     const totalOrders = filteredData.reduce((sum, item) => sum + item.totalOrders, 0);
     const totalRevenue = filteredData.reduce((sum, item) => sum + item.revenue, 0);
     const avgDailySales = filteredData.length > 0 ? totalSales / filteredData.length : 0;
+    const avgDailyRevenue = filteredData.length > 0 ? totalRevenue / filteredData.length : 0;
+
+    // Total units all time (sum of all quantities from all orders)
+    const totalUnitsAllTime = orders.reduce((sum, order) =>
+      sum + order.items.reduce((s, item) => s + item.quantity, 0), 0);
 
     return {
       totalSales,
-      totalUnits: totalUnitsAllTime,
       totalOrders,
       totalRevenue,
+      totalUnitsAllTime,
       avgDailySales: Math.round(avgDailySales),
+      avgDailyRevenue: Math.round(avgDailyRevenue),
     };
-  }, [filteredData, totalUnitsAllTime]);
+  }, [filteredData, orders]);
 
   // Prepare chart data - always show current month data
   const formattedData = useMemo(() => {
@@ -155,25 +156,33 @@ function DailyReports() {
       return [];
     }
 
-    const revenueLine = {
-      id: "Total Revenue",
-      color: "#0d9488",
-      data: currentMonthData.map((item) => ({
-        x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        y: item.revenue,
-      })),
-    };
-
+    let cumulativeUnits = 0;
     const unitsLine = {
-      id: "Total Units",
-      color: "#14b8a6",
-      data: currentMonthData.map((item) => ({
-        x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        y: item.totalUnits,
-      })),
+      id: "Cumulative Units",
+      color: "#0d9488",
+      data: currentMonthData.map((item) => {
+        cumulativeUnits += item.totalUnits;
+        return {
+          x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          y: cumulativeUnits,
+        };
+      }),
     };
 
-    return view === "revenue" ? [revenueLine] : [unitsLine];
+    let cumulativeRevenue = 0;
+    const revenueLine = {
+      id: "Cumulative Revenue",
+      color: "#14b8a6",
+      data: currentMonthData.map((item) => {
+        cumulativeRevenue += item.revenue;
+        return {
+          x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          y: cumulativeRevenue,
+        };
+      }),
+    };
+
+    return view === "units" ? [unitsLine] : [revenueLine];
   }, [currentMonthData, view]);
 
   // Data grid columns
@@ -204,10 +213,10 @@ function DailyReports() {
     },
     {
       field: "revenue",
-      headerName: "Revenue (LKR)",
+      headerName: "Revenue (Rs.)",
       width: 180,
       type: "number",
-      valueFormatter: (params) => `LKR ${params.value.toLocaleString()}`,
+      valueFormatter: (params) => `Rs. ${params.value.toLocaleString()}`,
     },
   ];
 
@@ -228,7 +237,7 @@ function DailyReports() {
       item.totalSales,
       item.totalUnits,
       item.totalOrders,
-      `LKR ${item.revenue.toLocaleString()}`,
+      `Rs. ${item.revenue.toLocaleString()}`,
     ]);
 
     doc.autoTable({
@@ -308,8 +317,8 @@ function DailyReports() {
               </div>
               <div className="stat-details">
                 <p className="stat-label">Daily Average</p>
-                <h3 className="stat-value">{summaryStats.avgDailySales.toLocaleString()}</h3>
-                <p className="stat-change">Avg. sales per day</p>
+                <h3 className="stat-value">Rs. {summaryStats.avgDailyRevenue.toLocaleString()}</h3>
+                <p className="stat-change">Avg. per day</p>
               </div>
             </div>
 
@@ -318,8 +327,8 @@ function DailyReports() {
                 <Package size={24} style={{ color: '#0d9488' }} />
               </div>
               <div className="stat-details">
-                <p className="stat-label">Total Units</p>
-                <h3 className="stat-value">{summaryStats.totalUnits.toLocaleString()}</h3>
+                <p className="stat-label">Total Units (All Time)</p>
+                <h3 className="stat-value">{summaryStats.totalUnitsAllTime.toLocaleString()}</h3>
                 <p className="stat-change">Units sold</p>
               </div>
             </div>
@@ -368,16 +377,16 @@ function DailyReports() {
 
             <div className="view-toggle">
               <button
-                className={`toggle-btn ${view === 'revenue' ? 'active' : ''}`}
-                onClick={() => setView('revenue')}
-              >
-                Revenue
-              </button>
-              <button
                 className={`toggle-btn ${view === 'units' ? 'active' : ''}`}
                 onClick={() => setView('units')}
               >
                 Units
+              </button>
+              <button
+                className={`toggle-btn ${view === 'revenue' ? 'active' : ''}`}
+                onClick={() => setView('revenue')}
+              >
+                Revenue
               </button>
             </div>
           </div>
@@ -385,7 +394,7 @@ function DailyReports() {
           {/* Chart */}
           <div className="chart-container">
             <h3 className="section-title">
-              {view === 'revenue' ? 'Revenue Trend' : 'Units Sold Trend'}
+              {view === 'units' ? 'Units Sold Trend' : 'Revenue Trend'}
             </h3>
             {formattedData.length > 0 ? (
               <div className="chart-wrapper">
@@ -469,7 +478,7 @@ function DailyReports() {
                     tickSize: 5,
                     tickPadding: 10,
                     tickRotation: 0,
-                    legend: `Total ${view === "revenue" ? "Revenue" : "Units"}`,
+                    legend: `Total ${view === "units" ? "Units" : "Revenue"}`,
                     legendOffset: -70,
                     legendPosition: "middle",
                   }}
