@@ -105,11 +105,6 @@ function Login() {
             {message && <p className="message">{message}</p>}
 
             <div style={{ textAlign: 'center', marginTop: '15px' }}>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-                <strong>Demo Credentials:</strong><br />
-                Admin: admin@example.com / Admin123<br />
-                User: user@wellvision.com / user123
-              </div>
               <Link to="/forgot-password" style={{ fontSize: '13px' }}>
                 Forgot Password?
               </Link>
