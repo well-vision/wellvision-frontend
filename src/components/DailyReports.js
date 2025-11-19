@@ -27,44 +27,57 @@ function DailyReports() {
 
   const [startDate, setStartDate] = useState(currentMonthStart);
   const [endDate, setEndDate] = useState(currentMonthEnd);
-  const [view, setView] = useState("sales");
+  const [view, setView] = useState("revenue");
 
   const [orders, setOrders] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch bills from backend
+  // Fetch orders and invoices from backend
   useEffect(() => {
-    const fetchBills = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:4000/api/invoices', {
+
+        // Fetch orders
+        const ordersResponse = await fetch('http://localhost:4000/api/orders', {
           credentials: 'include'
         });
-        const data = await response.json();
+        const ordersData = await ordersResponse.json();
 
-        if (data.success) {
-          setOrders(data.invoices); // Using orders state for bills data
+        // Fetch invoices
+        const invoicesResponse = await fetch('http://localhost:4000/api/invoices', {
+          credentials: 'include'
+        });
+        const invoicesData = await invoicesResponse.json();
+
+        if (ordersData.success && invoicesData.success) {
+          setOrders(ordersData.data);
+          setInvoices(invoicesData.invoices);
         } else {
-          setError(data.message || 'Failed to fetch bills');
+          setError('Failed to fetch data');
         }
       } catch (err) {
-        setError('Error fetching bills');
-        console.error('Fetch bills error:', err);
+        setError('Error fetching data');
+        console.error('Fetch error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBills();
+    fetchData();
   }, []);
 
-  // Group bills by date and calculate daily metrics
+  // Group orders and invoices by date and calculate daily metrics
   const dailyData = useMemo(() => {
-    const grouped = orders.reduce((acc, bill) => {
-      const dateKey = new Date(bill.date).toISOString().split('T')[0]; // YYYY-MM-DD format
-      if (!acc[dateKey]) {
-        acc[dateKey] = {
+    const grouped = {};
+
+    // Process orders for totalSales (sum of quantities), totalOrders (count), totalUnits (sum of quantities per day)
+    orders.forEach(order => {
+      const dateKey = new Date(order.placedAt).toISOString().split('T')[0]; // YYYY-MM-DD format
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
           date: dateKey,
           totalSales: 0,
           totalUnits: 0,
@@ -72,15 +85,29 @@ function DailyReports() {
           revenue: 0
         };
       }
-      acc[dateKey].totalSales += 1; // Each bill is a sale
-      acc[dateKey].totalUnits += 1; // Each bill represents 1 unit (simplified)
-      acc[dateKey].totalOrders += 1;
-      acc[dateKey].revenue += bill.amount; // Use bill amount for revenue
-      return acc;
-    }, {});
+      const orderQuantities = order.items.reduce((sum, item) => sum + item.quantity, 0);
+      grouped[dateKey].totalSales += orderQuantities; // Sum of quantities in order
+      grouped[dateKey].totalUnits += orderQuantities; // Same as totalSales for daily
+      grouped[dateKey].totalOrders += 1;
+    });
+
+    // Process invoices for revenue
+    invoices.forEach(invoice => {
+      const dateKey = new Date(invoice.date).toISOString().split('T')[0];
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
+          date: dateKey,
+          totalSales: 0,
+          totalUnits: 0,
+          totalOrders: 0,
+          revenue: 0
+        };
+      }
+      grouped[dateKey].revenue += invoice.amount;
+    });
 
     return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [orders]);
+  }, [orders, invoices]);
 
   // Filter data based on date range
   const filteredData = useMemo(() => {
@@ -101,24 +128,26 @@ function DailyReports() {
     });
   }, [dailyData]);
 
+  // Calculate total units from all orders ever (cumulative)
+  const totalUnitsAllTime = useMemo(() => {
+    return orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+  }, [orders]);
+
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
     const totalSales = filteredData.reduce((sum, item) => sum + item.totalSales, 0);
-    const totalUnits = filteredData.reduce((sum, item) => sum + item.totalUnits, 0);
     const totalOrders = filteredData.reduce((sum, item) => sum + item.totalOrders, 0);
     const totalRevenue = filteredData.reduce((sum, item) => sum + item.revenue, 0);
     const avgDailySales = filteredData.length > 0 ? totalSales / filteredData.length : 0;
-    const avgDailyRevenue = filteredData.length > 0 ? totalRevenue / filteredData.length : 0;
 
     return {
       totalSales,
-      totalUnits,
+      totalUnits: totalUnitsAllTime,
       totalOrders,
       totalRevenue,
       avgDailySales: Math.round(avgDailySales),
-      avgDailyRevenue: Math.round(avgDailyRevenue),
     };
-  }, [filteredData]);
+  }, [filteredData, totalUnitsAllTime]);
 
   // Prepare chart data - always show current month data
   const formattedData = useMemo(() => {
@@ -126,12 +155,12 @@ function DailyReports() {
       return [];
     }
 
-    const salesLine = {
-      id: "Total Sales",
+    const revenueLine = {
+      id: "Total Revenue",
       color: "#0d9488",
       data: currentMonthData.map((item) => ({
         x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        y: item.totalSales,
+        y: item.revenue,
       })),
     };
 
@@ -144,7 +173,7 @@ function DailyReports() {
       })),
     };
 
-    return view === "sales" ? [salesLine] : [unitsLine];
+    return view === "revenue" ? [revenueLine] : [unitsLine];
   }, [currentMonthData, view]);
 
   // Data grid columns
@@ -175,10 +204,10 @@ function DailyReports() {
     },
     {
       field: "revenue",
-      headerName: "Revenue (Rs.)",
+      headerName: "Revenue (LKR)",
       width: 180,
       type: "number",
-      valueFormatter: (params) => `Rs. ${params.value.toLocaleString()}`,
+      valueFormatter: (params) => `LKR ${params.value.toLocaleString()}`,
     },
   ];
 
@@ -199,7 +228,7 @@ function DailyReports() {
       item.totalSales,
       item.totalUnits,
       item.totalOrders,
-      `Rs. ${item.revenue.toLocaleString()}`,
+      `LKR ${item.revenue.toLocaleString()}`,
     ]);
 
     doc.autoTable({
@@ -245,7 +274,7 @@ function DailyReports() {
                 <TrendingUp size={24} style={{ color: '#1E40AF' }} />
               </div>
               <div className="stat-details">
-                <p className="stat-label">Total Sales</p>
+                <p className="stat-label">Total Units (Month)</p>
                 <h3 className="stat-value">{summaryStats.totalSales.toLocaleString()}</h3>
                 <p className="stat-change positive">+12% from last period</p>
               </div>
@@ -257,7 +286,7 @@ function DailyReports() {
               </div>
               <div className="stat-details">
                 <p className="stat-label">Total Revenue</p>
-                <h3 className="stat-value">Rs. {summaryStats.totalRevenue.toLocaleString()}</h3>
+                <h3 className="stat-value">LKR {summaryStats.totalRevenue.toLocaleString()}</h3>
                 <p className="stat-change positive">+8% from last period</p>
               </div>
             </div>
@@ -279,8 +308,8 @@ function DailyReports() {
               </div>
               <div className="stat-details">
                 <p className="stat-label">Daily Average</p>
-                <h3 className="stat-value">Rs. {summaryStats.avgDailyRevenue.toLocaleString()}</h3>
-                <p className="stat-change">Avg. per day</p>
+                <h3 className="stat-value">{summaryStats.avgDailySales.toLocaleString()}</h3>
+                <p className="stat-change">Avg. sales per day</p>
               </div>
             </div>
 
@@ -339,10 +368,10 @@ function DailyReports() {
 
             <div className="view-toggle">
               <button
-                className={`toggle-btn ${view === 'sales' ? 'active' : ''}`}
-                onClick={() => setView('sales')}
+                className={`toggle-btn ${view === 'revenue' ? 'active' : ''}`}
+                onClick={() => setView('revenue')}
               >
-                Sales
+                Revenue
               </button>
               <button
                 className={`toggle-btn ${view === 'units' ? 'active' : ''}`}
@@ -356,7 +385,7 @@ function DailyReports() {
           {/* Chart */}
           <div className="chart-container">
             <h3 className="section-title">
-              {view === 'sales' ? 'Sales Trend' : 'Units Sold Trend'}
+              {view === 'revenue' ? 'Revenue Trend' : 'Units Sold Trend'}
             </h3>
             {formattedData.length > 0 ? (
               <div className="chart-wrapper">
@@ -440,7 +469,7 @@ function DailyReports() {
                     tickSize: 5,
                     tickPadding: 10,
                     tickRotation: 0,
-                    legend: `Total ${view === "sales" ? "Sales" : "Units"}`,
+                    legend: `Total ${view === "revenue" ? "Revenue" : "Units"}`,
                     legendOffset: -70,
                     legendPosition: "middle",
                   }}
