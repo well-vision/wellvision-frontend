@@ -150,9 +150,9 @@ function DailyReports() {
     };
   }, [filteredData, orders]);
 
-  // Prepare chart data - always show current month data
+  // Prepare chart data - show data based on selected date range
   const formattedData = useMemo(() => {
-    if (!currentMonthData || currentMonthData.length === 0) {
+    if (!filteredData || filteredData.length === 0) {
       return [];
     }
 
@@ -160,7 +160,7 @@ function DailyReports() {
     const unitsLine = {
       id: "Cumulative Units",
       color: "#0d9488",
-      data: currentMonthData.map((item) => {
+      data: filteredData.map((item) => {
         cumulativeUnits += item.totalUnits;
         return {
           x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -173,7 +173,7 @@ function DailyReports() {
     const revenueLine = {
       id: "Cumulative Revenue",
       color: "#14b8a6",
-      data: currentMonthData.map((item) => {
+      data: filteredData.map((item) => {
         cumulativeRevenue += item.revenue;
         return {
           x: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -183,7 +183,7 @@ function DailyReports() {
     };
 
     return view === "units" ? [unitsLine] : [revenueLine];
-  }, [currentMonthData, view]);
+  }, [filteredData, view]);
 
   // Data grid columns
   const columns = [
